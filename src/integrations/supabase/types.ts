@@ -14,7 +14,183 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      account_settings: {
+        Row: {
+          actual_bank_balance: number
+          actual_cash_balance: number
+          business_name: string
+          created_at: string
+          id: string
+          opening_bank_balance: number
+          opening_cash_balance: number
+          user_id: string
+        }
+        Insert: {
+          actual_bank_balance?: number
+          actual_cash_balance?: number
+          business_name?: string
+          created_at?: string
+          id?: string
+          opening_bank_balance?: number
+          opening_cash_balance?: number
+          user_id: string
+        }
+        Update: {
+          actual_bank_balance?: number
+          actual_cash_balance?: number
+          business_name?: string
+          created_at?: string
+          id?: string
+          opening_bank_balance?: number
+          opening_cash_balance?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bank_transactions: {
+        Row: {
+          account_name: string
+          created_at: string
+          credit: number
+          debit: number
+          description: string | null
+          id: string
+          transaction_date: string
+          transaction_type: string | null
+          user_id: string
+        }
+        Insert: {
+          account_name?: string
+          created_at?: string
+          credit?: number
+          debit?: number
+          description?: string | null
+          id?: string
+          transaction_date?: string
+          transaction_type?: string | null
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          created_at?: string
+          credit?: number
+          debit?: number
+          description?: string | null
+          id?: string
+          transaction_date?: string
+          transaction_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cash_transactions: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          transaction_date: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_date?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_date?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          expense_date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          fee: number
+          id: string
+          payment_method: string
+          transaction_cost: number
+          transaction_date: string
+          transaction_number: string | null
+          transaction_time: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          fee?: number
+          id?: string
+          payment_method?: string
+          transaction_cost?: number
+          transaction_date?: string
+          transaction_number?: string | null
+          transaction_time?: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          fee?: number
+          id?: string
+          payment_method?: string
+          transaction_cost?: number
+          transaction_date?: string
+          transaction_number?: string | null
+          transaction_time?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
