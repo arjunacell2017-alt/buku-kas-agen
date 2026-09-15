@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedKasRouteImport } from './routes/_authenticated/kas'
+import { Route as AuthenticatedRekeningRouteImport } from './routes/_authenticated/rekening'
 import { Route as AuthenticatedTransaksiRouteImport } from './routes/_authenticated/transaksi'
 
 const IndexRoute = IndexRouteImport.update({
@@ -34,6 +36,16 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedKasRoute = AuthenticatedKasRouteImport.update({
+  id: '/kas',
+  path: '/kas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRekeningRoute = AuthenticatedRekeningRouteImport.update({
+  id: '/rekening',
+  path: '/rekening',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTransaksiRoute = AuthenticatedTransaksiRouteImport.update({
   id: '/transaksi',
   path: '/transaksi',
@@ -44,12 +56,16 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kas': typeof AuthenticatedKasRoute
+  '/rekening': typeof AuthenticatedRekeningRoute
   '/transaksi': typeof AuthenticatedTransaksiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/kas': typeof AuthenticatedKasRoute
+  '/rekening': typeof AuthenticatedRekeningRoute
   '/transaksi': typeof AuthenticatedTransaksiRoute
 }
 export interface FileRoutesById {
@@ -58,19 +74,23 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/kas': typeof AuthenticatedKasRoute
+  '/_authenticated/rekening': typeof AuthenticatedRekeningRoute
   '/_authenticated/transaksi': typeof AuthenticatedTransaksiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/transaksi'
+  fullPaths: '/' | '/auth' | '/dashboard' | '/kas' | '/rekening' | '/transaksi'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/transaksi'
+  to: '/' | '/auth' | '/dashboard' | '/kas' | '/rekening' | '/transaksi'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
+    | '/_authenticated/kas'
+    | '/_authenticated/rekening'
     | '/_authenticated/transaksi'
   fileRoutesById: FileRoutesById
 }
@@ -110,6 +130,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/kas': {
+      id: '/_authenticated/kas'
+      path: '/kas'
+      fullPath: '/kas'
+      preLoaderRoute: typeof AuthenticatedKasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rekening': {
+      id: '/_authenticated/rekening'
+      path: '/rekening'
+      fullPath: '/rekening'
+      preLoaderRoute: typeof AuthenticatedRekeningRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/transaksi': {
       id: '/_authenticated/transaksi'
       path: '/transaksi'
@@ -122,11 +156,15 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedKasRoute: typeof AuthenticatedKasRoute
+  AuthenticatedRekeningRoute: typeof AuthenticatedRekeningRoute
   AuthenticatedTransaksiRoute: typeof AuthenticatedTransaksiRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedKasRoute: AuthenticatedKasRoute,
+  AuthenticatedRekeningRoute: AuthenticatedRekeningRoute,
   AuthenticatedTransaksiRoute: AuthenticatedTransaksiRoute,
 }
 
