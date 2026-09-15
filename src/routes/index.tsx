@@ -1,24 +1,50 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Buku Kas Agen BRILink — Pembukuan Harian Sederhana" },
+      {
+        name: "description",
+        content:
+          "Catat transaksi, kas, saldo rekening, fee, biaya, dan laba bersih Agen BRILink dalam satu dashboard ringan.",
+      },
+      { property: "og:title", content: "Buku Kas Agen BRILink" },
+      {
+        property: "og:description",
+        content: "Pembukuan harian Agen BRILink yang ringan, cepat, dan mudah dipakai.",
+      },
+    ],
+  }),
+  component: Beranda,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Beranda() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md text-center">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Buku Kas Agen BRILink
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Pencatatan transaksi harian, kas, rekening, biaya operasional, laba bersih, dan
+          rekonsiliasi — sederhana dan cepat.
+        </p>
+        <div className="mt-6 flex justify-center gap-2">
+          <Link
+            to="/dashboard"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+          >
+            Buka Dashboard
+          </Link>
+          <Link
+            to="/auth"
+            className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+          >
+            Masuk
+          </Link>
+        </div>
+      </div>
+    </main>
   );
 }
