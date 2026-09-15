@@ -12,8 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedBiayaRouteImport } from './routes/_authenticated/biaya'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedKasRouteImport } from './routes/_authenticated/kas'
+import { Route as AuthenticatedLaporanRouteImport } from './routes/_authenticated/laporan'
+import { Route as AuthenticatedPengaturanRouteImport } from './routes/_authenticated/pengaturan'
 import { Route as AuthenticatedRekeningRouteImport } from './routes/_authenticated/rekening'
 import { Route as AuthenticatedTransaksiRouteImport } from './routes/_authenticated/transaksi'
 
@@ -31,6 +34,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedBiayaRoute = AuthenticatedBiayaRouteImport.update({
+  id: '/biaya',
+  path: '/biaya',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -39,6 +47,16 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedKasRoute = AuthenticatedKasRouteImport.update({
   id: '/kas',
   path: '/kas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLaporanRoute = AuthenticatedLaporanRouteImport.update({
+  id: '/laporan',
+  path: '/laporan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPengaturanRoute = AuthenticatedPengaturanRouteImport.update({
+  id: '/pengaturan',
+  path: '/pengaturan',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRekeningRoute = AuthenticatedRekeningRouteImport.update({
@@ -55,16 +73,22 @@ const AuthenticatedTransaksiRoute = AuthenticatedTransaksiRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/biaya': typeof AuthenticatedBiayaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kas': typeof AuthenticatedKasRoute
+  '/laporan': typeof AuthenticatedLaporanRoute
+  '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/rekening': typeof AuthenticatedRekeningRoute
   '/transaksi': typeof AuthenticatedTransaksiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/biaya': typeof AuthenticatedBiayaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kas': typeof AuthenticatedKasRoute
+  '/laporan': typeof AuthenticatedLaporanRoute
+  '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/rekening': typeof AuthenticatedRekeningRoute
   '/transaksi': typeof AuthenticatedTransaksiRoute
 }
@@ -73,23 +97,47 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/biaya': typeof AuthenticatedBiayaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kas': typeof AuthenticatedKasRoute
+  '/_authenticated/laporan': typeof AuthenticatedLaporanRoute
+  '/_authenticated/pengaturan': typeof AuthenticatedPengaturanRoute
   '/_authenticated/rekening': typeof AuthenticatedRekeningRoute
   '/_authenticated/transaksi': typeof AuthenticatedTransaksiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/kas' | '/rekening' | '/transaksi'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/biaya'
+    | '/dashboard'
+    | '/kas'
+    | '/laporan'
+    | '/pengaturan'
+    | '/rekening'
+    | '/transaksi'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/kas' | '/rekening' | '/transaksi'
+  to:
+    | '/'
+    | '/auth'
+    | '/biaya'
+    | '/dashboard'
+    | '/kas'
+    | '/laporan'
+    | '/pengaturan'
+    | '/rekening'
+    | '/transaksi'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/biaya'
     | '/_authenticated/dashboard'
     | '/_authenticated/kas'
+    | '/_authenticated/laporan'
+    | '/_authenticated/pengaturan'
     | '/_authenticated/rekening'
     | '/_authenticated/transaksi'
   fileRoutesById: FileRoutesById
@@ -123,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/biaya': {
+      id: '/_authenticated/biaya'
+      path: '/biaya'
+      fullPath: '/biaya'
+      preLoaderRoute: typeof AuthenticatedBiayaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -135,6 +190,20 @@ declare module '@tanstack/react-router' {
       path: '/kas'
       fullPath: '/kas'
       preLoaderRoute: typeof AuthenticatedKasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/laporan': {
+      id: '/_authenticated/laporan'
+      path: '/laporan'
+      fullPath: '/laporan'
+      preLoaderRoute: typeof AuthenticatedLaporanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pengaturan': {
+      id: '/_authenticated/pengaturan'
+      path: '/pengaturan'
+      fullPath: '/pengaturan'
+      preLoaderRoute: typeof AuthenticatedPengaturanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/rekening': {
@@ -155,15 +224,21 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBiayaRoute: typeof AuthenticatedBiayaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKasRoute: typeof AuthenticatedKasRoute
+  AuthenticatedLaporanRoute: typeof AuthenticatedLaporanRoute
+  AuthenticatedPengaturanRoute: typeof AuthenticatedPengaturanRoute
   AuthenticatedRekeningRoute: typeof AuthenticatedRekeningRoute
   AuthenticatedTransaksiRoute: typeof AuthenticatedTransaksiRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBiayaRoute: AuthenticatedBiayaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKasRoute: AuthenticatedKasRoute,
+  AuthenticatedLaporanRoute: AuthenticatedLaporanRoute,
+  AuthenticatedPengaturanRoute: AuthenticatedPengaturanRoute,
   AuthenticatedRekeningRoute: AuthenticatedRekeningRoute,
   AuthenticatedTransaksiRoute: AuthenticatedTransaksiRoute,
 }
