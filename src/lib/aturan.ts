@@ -1,0 +1,61 @@
+/**
+ * Aturan dampak transaksi terhadap kas & rekening.
+ * Modular: cukup ubah/ tambah entri di ARAH_NOMINAL untuk jenis baru.
+ */
+
+export type MetodeFee = "Tunai" | "Saldo";
+export type MetodeBiaya = "Tunai" | "Saldo" | "Tidak Ada";
+
+export type InputTransaksi = {
+  transaction_type: string;
+  amount: number;
+  fee: number;
+  fee_method: string;
+  transaction_cost: number;
+  cost_method: string;
+};
+
+export type Mutasi = {
+  mutasiRekening: number;
+  mutasiKas: number;
+  pendapatanFee: number;
+  biaya: number;
+};
+
+/**
+ * Arah nominal: tanda mutasi rekening untuk nominal transaksi.
+ * +1 = rekening bertambah & kas berkurang (uang keluar dari laci).
+ * -1 = rekening berkurang & kas bertambah (agen terima uang tunai).
+ */
+const ARAH_NOMINAL: Record<string, 1 | -1> = {
+  "Tarik Tunai": 1,
+  "Setor Tunai": -1,
+  Transfer: -1,
+  Pembayaran: -1,
+  Pulsa: -1,
+  "Token PLN": -1,
+  BRIVA: -1,
+  "Top Up": -1,
+  Lainnya: -1,
+};
+
+export function hitungMutasi(t: InputTransaksi): Mutasi {
+  const arah = ARAH_NOMINAL[t.transaction_type] ?? -1;
+  const nominal = Math.max(0, Number(t.amount) || 0);
+  const fee = Math.max(0, Number(t.fee) || 0);
+  const biaya = Math.max(0, Number(t.transaction_cost) || 0);
+
+  const feeKeSaldo = t.fee_method === "Saldo";
+  const biayaTunai = t.cost_method === "Tunai";
+  const biayaSaldo = t.cost_method === "Saldo";
+
+  return {
+    mutasiRekening:
+      arah * nominal + (feeKeSaldo ? fee : 0) - (biayaSaldo ? biaya : 0),
+    mutasiKas: -arah * nominal + (feeKeSaldo ? 0 : fee) - (biayaTunai ? biaya : 0),
+    pendapatanFee: fee,
+    biaya,
+  };
+}
+
+export const tandaRupiah = (n: number) => (n > 0 ? "+" : "");

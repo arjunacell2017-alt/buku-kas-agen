@@ -23,6 +23,7 @@ export type Database = {
           id: string
           opening_bank_balance: number
           opening_cash_balance: number
+          start_date: string
           user_id: string
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           id?: string
           opening_bank_balance?: number
           opening_cash_balance?: number
+          start_date?: string
           user_id: string
         }
         Update: {
@@ -43,6 +45,7 @@ export type Database = {
           id?: string
           opening_bank_balance?: number
           opening_cash_balance?: number
+          start_date?: string
           user_id?: string
         }
         Relationships: []
@@ -149,9 +152,11 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          cost_method: string
           created_at: string
           description: string | null
           fee: number
+          fee_method: string
           id: string
           payment_method: string
           transaction_cost: number
@@ -159,13 +164,16 @@ export type Database = {
           transaction_number: string | null
           transaction_time: string
           transaction_type: string
+          updated_at: string
           user_id: string
         }
         Insert: {
           amount?: number
+          cost_method?: string
           created_at?: string
           description?: string | null
           fee?: number
+          fee_method?: string
           id?: string
           payment_method?: string
           transaction_cost?: number
@@ -173,13 +181,16 @@ export type Database = {
           transaction_number?: string | null
           transaction_time?: string
           transaction_type: string
+          updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number
+          cost_method?: string
           created_at?: string
           description?: string | null
           fee?: number
+          fee_method?: string
           id?: string
           payment_method?: string
           transaction_cost?: number
@@ -187,13 +198,36 @@ export type Database = {
           transaction_number?: string | null
           transaction_time?: string
           transaction_type?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      ledger_view: {
+        Row: {
+          amount: number | null
+          cost_method: string | null
+          created_at: string | null
+          description: string | null
+          fee: number | null
+          fee_method: string | null
+          mutasi_kas: number | null
+          mutasi_rekening: number | null
+          pendapatan_fee: number | null
+          saldo_kas: number | null
+          saldo_rekening: number | null
+          transaction_cost: number | null
+          transaction_date: string | null
+          transaction_id: string | null
+          transaction_number: string | null
+          transaction_time: string | null
+          transaction_type: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

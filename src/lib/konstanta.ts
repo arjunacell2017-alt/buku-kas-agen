@@ -12,6 +12,10 @@ export const JENIS_TRANSAKSI = [
 
 export const METODE_PEMBAYARAN = ["Tunai", "Rekening", "Lainnya"] as const;
 
+export const METODE_FEE = ["Tunai", "Saldo"] as const;
+
+export const METODE_BIAYA = ["Tidak Ada", "Tunai", "Saldo"] as const;
+
 export const KATEGORI_BIAYA = [
   "Internet",
   "Listrik",
