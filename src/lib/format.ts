@@ -6,6 +6,12 @@ export function rupiah(value: number | string | null | undefined): string {
   return `${neg ? "-" : ""}Rp${s}`;
 }
 
+/** Rupiah dengan tanda +/- untuk mutasi */
+export function rupiahMutasi(value: number | string | null | undefined): string {
+  const n = Number(value ?? 0);
+  return `${n > 0 ? "+" : ""}${rupiah(n)}`;
+}
+
 /** ISO yyyy-mm-dd -> dd/mm/yyyy */
 export function tanggalID(iso: string | null | undefined): string {
   if (!iso) return "-";
@@ -34,16 +40,34 @@ export function nowTime(): string {
   return `${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-export type Periode = "hari" | "minggu" | "bulan" | "custom";
+export type Periode = "hari" | "kemarin" | "minggu" | "bulan" | "bulanlalu" | "custom";
+
+export const PERIODE_LABEL: [Exclude<Periode, "custom">, string][] = [
+  ["hari", "Hari Ini"],
+  ["kemarin", "Kemarin"],
+  ["minggu", "Minggu Ini"],
+  ["bulan", "Bulan Ini"],
+  ["bulanlalu", "Bulan Lalu"],
+];
 
 export function rangeFromPeriode(p: Periode): { from: string; to: string } {
   const now = new Date();
   if (p === "hari") return { from: toISODate(now), to: toISODate(now) };
+  if (p === "kemarin") {
+    const y = new Date(now);
+    y.setDate(now.getDate() - 1);
+    return { from: toISODate(y), to: toISODate(y) };
+  }
   if (p === "minggu") {
     const day = (now.getDay() + 6) % 7; // senin = 0
     const start = new Date(now);
     start.setDate(now.getDate() - day);
     return { from: toISODate(start), to: toISODate(now) };
+  }
+  if (p === "bulanlalu") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0);
+    return { from: toISODate(start), to: toISODate(end) };
   }
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   return { from: toISODate(start), to: toISODate(now) };
