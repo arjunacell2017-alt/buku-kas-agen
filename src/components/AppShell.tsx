@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 const MENU = [
   { to: "/dashboard", label: "Dashboard", short: "Home" },
   { to: "/transaksi", label: "Transaksi", short: "Transaksi" },
+  { to: "/mutasi", label: "Mutasi Dana", short: "Mutasi" },
   { to: "/kas", label: "Kas", short: "Kas" },
   { to: "/rekening", label: "Rekening", short: "Rek" },
   { to: "/biaya", label: "Biaya Operasional", short: "Biaya" },
