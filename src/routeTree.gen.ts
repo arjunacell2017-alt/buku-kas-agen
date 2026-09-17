@@ -16,6 +16,7 @@ import { Route as AuthenticatedBiayaRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedKasRouteImport } from './routes/_authenticated/kas'
 import { Route as AuthenticatedLaporanRouteImport } from './routes/_authenticated/laporan'
+import { Route as AuthenticatedMutasiRouteImport } from './routes/_authenticated/mutasi'
 import { Route as AuthenticatedPengaturanRouteImport } from './routes/_authenticated/pengaturan'
 import { Route as AuthenticatedRekeningRouteImport } from './routes/_authenticated/rekening'
 import { Route as AuthenticatedTransaksiRouteImport } from './routes/_authenticated/transaksi'
@@ -54,6 +55,11 @@ const AuthenticatedLaporanRoute = AuthenticatedLaporanRouteImport.update({
   path: '/laporan',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMutasiRoute = AuthenticatedMutasiRouteImport.update({
+  id: '/mutasi',
+  path: '/mutasi',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPengaturanRoute = AuthenticatedPengaturanRouteImport.update({
   id: '/pengaturan',
   path: '/pengaturan',
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kas': typeof AuthenticatedKasRoute
   '/laporan': typeof AuthenticatedLaporanRoute
+  '/mutasi': typeof AuthenticatedMutasiRoute
   '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/rekening': typeof AuthenticatedRekeningRoute
   '/transaksi': typeof AuthenticatedTransaksiRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/kas': typeof AuthenticatedKasRoute
   '/laporan': typeof AuthenticatedLaporanRoute
+  '/mutasi': typeof AuthenticatedMutasiRoute
   '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/rekening': typeof AuthenticatedRekeningRoute
   '/transaksi': typeof AuthenticatedTransaksiRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/kas': typeof AuthenticatedKasRoute
   '/_authenticated/laporan': typeof AuthenticatedLaporanRoute
+  '/_authenticated/mutasi': typeof AuthenticatedMutasiRoute
   '/_authenticated/pengaturan': typeof AuthenticatedPengaturanRoute
   '/_authenticated/rekening': typeof AuthenticatedRekeningRoute
   '/_authenticated/transaksi': typeof AuthenticatedTransaksiRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kas'
     | '/laporan'
+    | '/mutasi'
     | '/pengaturan'
     | '/rekening'
     | '/transaksi'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/kas'
     | '/laporan'
+    | '/mutasi'
     | '/pengaturan'
     | '/rekening'
     | '/transaksi'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/kas'
     | '/_authenticated/laporan'
+    | '/_authenticated/mutasi'
     | '/_authenticated/pengaturan'
     | '/_authenticated/rekening'
     | '/_authenticated/transaksi'
@@ -199,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLaporanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/mutasi': {
+      id: '/_authenticated/mutasi'
+      path: '/mutasi'
+      fullPath: '/mutasi'
+      preLoaderRoute: typeof AuthenticatedMutasiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pengaturan': {
       id: '/_authenticated/pengaturan'
       path: '/pengaturan'
@@ -228,6 +247,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedKasRoute: typeof AuthenticatedKasRoute
   AuthenticatedLaporanRoute: typeof AuthenticatedLaporanRoute
+  AuthenticatedMutasiRoute: typeof AuthenticatedMutasiRoute
   AuthenticatedPengaturanRoute: typeof AuthenticatedPengaturanRoute
   AuthenticatedRekeningRoute: typeof AuthenticatedRekeningRoute
   AuthenticatedTransaksiRoute: typeof AuthenticatedTransaksiRoute
@@ -238,6 +258,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedKasRoute: AuthenticatedKasRoute,
   AuthenticatedLaporanRoute: AuthenticatedLaporanRoute,
+  AuthenticatedMutasiRoute: AuthenticatedMutasiRoute,
   AuthenticatedPengaturanRoute: AuthenticatedPengaturanRoute,
   AuthenticatedRekeningRoute: AuthenticatedRekeningRoute,
   AuthenticatedTransaksiRoute: AuthenticatedTransaksiRoute,

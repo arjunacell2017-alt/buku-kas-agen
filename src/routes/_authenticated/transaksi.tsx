@@ -3,8 +3,22 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/db";
-import { rupiah, tanggalID, jamID, todayISO, nowTime, parseNominal } from "@/lib/format";
-import { JENIS_TRANSAKSI, METODE_PEMBAYARAN } from "@/lib/konstanta";
+import { hitungMutasi } from "@/lib/aturan";
+import {
+  rupiah,
+  rupiahMutasi,
+  tanggalID,
+  jamID,
+  todayISO,
+  nowTime,
+  parseNominal,
+} from "@/lib/format";
+import {
+  JENIS_TRANSAKSI,
+  METODE_PEMBAYARAN,
+  METODE_FEE,
+  METODE_BIAYA,
+} from "@/lib/konstanta";
 import { PageHeader, Panel, Empty } from "@/components/ui-kit";
 import { Modal, Field, inputClass, btnPrimary, btnGhost } from "@/components/Modal";
 
@@ -22,7 +36,9 @@ type Form = {
   transaction_type: string;
   amount: string;
   fee: string;
+  fee_method: string;
   transaction_cost: string;
+  cost_method: string;
   payment_method: string;
   description: string;
 };
@@ -34,7 +50,9 @@ const kosong = (): Form => ({
   transaction_type: "Tarik Tunai",
   amount: "",
   fee: "",
+  fee_method: "Tunai",
   transaction_cost: "",
+  cost_method: "Tidak Ada",
   payment_method: "Tunai",
   description: "",
 });
@@ -55,7 +73,7 @@ function TransaksiPage() {
       let q = supabase
         .from("transactions")
         .select(
-          "id,transaction_date,transaction_time,transaction_number,transaction_type,amount,fee,transaction_cost,payment_method,description",
+          "id,transaction_date,transaction_time,transaction_number,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,payment_method,description",
           { count: "exact" },
         )
         .order("transaction_date", { ascending: false })
@@ -81,7 +99,9 @@ function TransaksiPage() {
         transaction_type: f.transaction_type,
         amount: parseNominal(f.amount),
         fee: parseNominal(f.fee),
-        transaction_cost: parseNominal(f.transaction_cost),
+        fee_method: f.fee_method,
+        transaction_cost: f.cost_method === "Tidak Ada" ? 0 : parseNominal(f.transaction_cost),
+        cost_method: f.cost_method,
         payment_method: f.payment_method,
         description: f.description || null,
       };
@@ -110,6 +130,16 @@ function TransaksiPage() {
 
   const total = list.data?.count ?? 0;
   const maksHal = Math.max(0, Math.ceil(total / PER_HAL) - 1);
+
+  // Pratinjau dampak transaksi pada form yang sedang diisi
+  const pratinjau = hitungMutasi({
+    transaction_type: form.transaction_type,
+    amount: parseNominal(form.amount),
+    fee: parseNominal(form.fee),
+    fee_method: form.fee_method,
+    transaction_cost: form.cost_method === "Tidak Ada" ? 0 : parseNominal(form.transaction_cost),
+    cost_method: form.cost_method,
+  });
 
   return (
     <div className="space-y-4">
@@ -185,58 +215,78 @@ function TransaksiPage() {
                 <tr className="text-left text-xs text-muted-foreground">
                   <th className="py-2">Tanggal</th>
                   <th className="py-2">Jam</th>
-                  <th className="py-2">No.</th>
                   <th className="py-2">Jenis</th>
                   <th className="py-2 text-right">Nominal</th>
                   <th className="py-2 text-right">Fee</th>
-                  <th className="py-2">Metode</th>
+                  <th className="py-2">Fee via</th>
+                  <th className="py-2 text-right">Mutasi Rekening</th>
+                  <th className="py-2 text-right">Mutasi Kas</th>
                   <th className="py-2">Keterangan</th>
                   <th className="py-2 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {(list.data?.rows ?? []).map((r) => (
-                  <tr key={r.id} className="border-t border-border">
-                    <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
-                    <td className="py-2">{jamID(r.transaction_time)}</td>
-                    <td className="py-2">{r.transaction_number ?? "-"}</td>
-                    <td className="py-2 whitespace-nowrap">{r.transaction_type}</td>
-                    <td className="py-2 text-right tabular-nums">{rupiah(r.amount)}</td>
-                    <td className="py-2 text-right tabular-nums">{rupiah(r.fee)}</td>
-                    <td className="py-2">{r.payment_method}</td>
-                    <td className="py-2 text-muted-foreground">{r.description ?? "-"}</td>
-                    <td className="py-2 text-right whitespace-nowrap">
-                      <button
-                        className="text-xs text-primary underline"
-                        onClick={() => {
-                          setForm({
-                            id: r.id,
-                            transaction_date: r.transaction_date,
-                            transaction_time: jamID(r.transaction_time),
-                            transaction_number: r.transaction_number ?? "",
-                            transaction_type: r.transaction_type,
-                            amount: String(Number(r.amount)),
-                            fee: String(Number(r.fee)),
-                            transaction_cost: String(Number(r.transaction_cost)),
-                            payment_method: r.payment_method,
-                            description: r.description ?? "",
-                          });
-                          setOpen(true);
-                        }}
+                {(list.data?.rows ?? []).map((r) => {
+                  const m = hitungMutasi(r);
+                  return (
+                    <tr key={r.id} className="border-t border-border">
+                      <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
+                      <td className="py-2">{jamID(r.transaction_time)}</td>
+                      <td className="py-2 whitespace-nowrap">{r.transaction_type}</td>
+                      <td className="py-2 text-right tabular-nums">{rupiah(r.amount)}</td>
+                      <td className="py-2 text-right tabular-nums">{rupiah(r.fee)}</td>
+                      <td className="py-2">{r.fee_method}</td>
+                      <td
+                        className={`py-2 text-right tabular-nums ${m.mutasiRekening < 0 ? "text-destructive" : "text-success"}`}
                       >
-                        Edit
-                      </button>
-                      <button
-                        className="ml-3 text-xs text-destructive underline"
-                        onClick={() => {
-                          if (confirm("Hapus transaksi ini?")) hapus.mutate(r.id);
-                        }}
+                        {rupiahMutasi(m.mutasiRekening)}
+                      </td>
+                      <td
+                        className={`py-2 text-right tabular-nums ${m.mutasiKas < 0 ? "text-destructive" : "text-success"}`}
                       >
-                        Hapus
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        {rupiahMutasi(m.mutasiKas)}
+                      </td>
+                      <td className="py-2 text-muted-foreground">{r.description ?? "-"}</td>
+                      <td className="py-2 text-right whitespace-nowrap">
+                        <button
+                          className="text-xs text-primary underline"
+                          onClick={() => {
+                            setForm({
+                              id: r.id,
+                              transaction_date: r.transaction_date,
+                              transaction_time: jamID(r.transaction_time),
+                              transaction_number: r.transaction_number ?? "",
+                              transaction_type: r.transaction_type,
+                              amount: String(Number(r.amount)),
+                              fee: String(Number(r.fee)),
+                              fee_method: r.fee_method ?? "Tunai",
+                              transaction_cost: String(Number(r.transaction_cost)),
+                              cost_method: r.cost_method ?? "Tidak Ada",
+                              payment_method: r.payment_method,
+                              description: r.description ?? "",
+                            });
+                            setOpen(true);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="ml-3 text-xs text-destructive underline"
+                          onClick={() => {
+                            if (
+                              confirm(
+                                "Hapus transaksi ini? Seluruh mutasi kas, rekening, fee, dan biaya ikut dibatalkan.",
+                              )
+                            )
+                              hapus.mutate(r.id);
+                          }}
+                        >
+                          Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -314,14 +364,13 @@ function TransaksiPage() {
           <Field label="Nominal">
             <input
               inputMode="numeric"
+              required
               className={inputClass}
               value={form.amount}
-              onChange={(e) =>
-                setForm({ ...form, amount: e.target.value.replace(/[^0-9]/g, "") })
-              }
+              onChange={(e) => setForm({ ...form, amount: e.target.value.replace(/[^0-9]/g, "") })}
             />
           </Field>
-          <Field label="Fee">
+          <Field label="Fee (pendapatan agen)">
             <input
               inputMode="numeric"
               className={inputClass}
@@ -329,17 +378,44 @@ function TransaksiPage() {
               onChange={(e) => setForm({ ...form, fee: e.target.value.replace(/[^0-9]/g, "") })}
             />
           </Field>
+          <Field label="Metode pembayaran fee">
+            <select
+              className={inputClass}
+              value={form.fee_method}
+              onChange={(e) => setForm({ ...form, fee_method: e.target.value })}
+            >
+              {METODE_FEE.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Metode pembayaran biaya">
+            <select
+              className={inputClass}
+              value={form.cost_method}
+              onChange={(e) => setForm({ ...form, cost_method: e.target.value })}
+            >
+              {METODE_BIAYA.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </Field>
           <Field label="Biaya transaksi">
             <input
               inputMode="numeric"
-              className={inputClass}
-              value={form.transaction_cost}
+              disabled={form.cost_method === "Tidak Ada"}
+              className={`${inputClass} disabled:opacity-50`}
+              value={form.cost_method === "Tidak Ada" ? "" : form.transaction_cost}
               onChange={(e) =>
                 setForm({ ...form, transaction_cost: e.target.value.replace(/[^0-9]/g, "") })
               }
             />
           </Field>
-          <Field label="Metode pembayaran">
+          <Field label="Metode pembayaran transaksi">
             <select
               className={inputClass}
               value={form.payment_method}
@@ -362,6 +438,31 @@ function TransaksiPage() {
               />
             </Field>
           </div>
+
+          <div className="sm:col-span-2 rounded-md border border-border bg-muted/30 p-3 text-xs">
+            <p className="mb-1 font-medium">Dampak otomatis transaksi ini</p>
+            <div className="grid grid-cols-3 gap-2 tabular-nums">
+              <div>
+                <span className="block text-muted-foreground">Saldo Rekening</span>
+                <span
+                  className={pratinjau.mutasiRekening < 0 ? "text-destructive" : "text-success"}
+                >
+                  {rupiahMutasi(pratinjau.mutasiRekening)}
+                </span>
+              </div>
+              <div>
+                <span className="block text-muted-foreground">Uang Kas</span>
+                <span className={pratinjau.mutasiKas < 0 ? "text-destructive" : "text-success"}>
+                  {rupiahMutasi(pratinjau.mutasiKas)}
+                </span>
+              </div>
+              <div>
+                <span className="block text-muted-foreground">Pendapatan Fee</span>
+                <span className="text-success">{rupiahMutasi(pratinjau.pendapatanFee)}</span>
+              </div>
+            </div>
+          </div>
+
           <div className="sm:col-span-2 flex justify-end gap-2">
             <button type="button" className={btnGhost} onClick={() => setOpen(false)}>
               Batal
