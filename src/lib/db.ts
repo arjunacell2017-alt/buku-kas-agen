@@ -119,6 +119,7 @@ export async function fetchSaldo() {
     kredit,
     mutasiKasTx,
     mutasiBankTx,
+    mutasiBankManual,
     feeTunai,
     feeSaldo,
     totalFee: feeTunai + feeSaldo,
