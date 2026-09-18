@@ -83,23 +83,34 @@ export async function fetchSaldo() {
     if (m > 0) kredit += m;
     else if (m < 0) debit += -m;
   };
+  // Kas Masuk = seluruh mutasi kas positif, Kas Keluar = nilai absolut mutasi negatif.
+  let kasMasuk = 0;
+  let kasKeluar = 0;
+  const catatMutasiKas = (m: number) => {
+    if (m > 0) kasMasuk += m;
+    else if (m < 0) kasKeluar += -m;
+  };
 
   for (const r of tx.data ?? []) {
     const m = hitungMutasi(r);
     mutasiKasTx += m.mutasiKas;
     mutasiBankTx += m.mutasiRekening;
     catatMutasiBank(m.mutasiRekening);
+    catatMutasiKas(m.mutasiKas);
     if (r.fee_method === "Saldo") feeSaldo += Number(r.fee);
     else feeTunai += Number(r.fee);
     biayaTransaksi += m.biaya;
   }
 
-  const masuk = (kas.data ?? [])
-    .filter((r) => r.type === "Kas Masuk")
-    .reduce((a, r) => a + Number(r.amount), 0);
-  const keluar = (kas.data ?? [])
-    .filter((r) => r.type === "Kas Keluar")
-    .reduce((a, r) => a + Number(r.amount), 0);
+  // Catatan kas manual ikut dihitung sebagai mutasi kas.
+  let masuk = 0;
+  let keluar = 0;
+  for (const r of kas.data ?? []) {
+    const amt = Number(r.amount);
+    if (r.type === "Kas Masuk") masuk += amt;
+    else keluar += amt;
+    catatMutasiKas(r.type === "Kas Masuk" ? amt : -amt);
+  }
 
   let mutasiBankManual = 0;
   for (const r of bank.data ?? []) {
@@ -108,13 +119,15 @@ export async function fetchSaldo() {
     catatMutasiBank(m);
   }
 
-  const saldoKas = settings.opening_cash_balance + mutasiKasTx + masuk - keluar;
+  const saldoKas = settings.opening_cash_balance + kasMasuk - kasKeluar;
   const saldoBank = settings.opening_bank_balance + kredit - debit;
 
   return {
     settings,
     masuk,
     keluar,
+    kasMasuk,
+    kasKeluar,
     debit,
     kredit,
     mutasiKasTx,

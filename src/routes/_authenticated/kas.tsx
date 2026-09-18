@@ -95,10 +95,10 @@ function KasPage() {
       />
 
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        <Kpi label="Saldo Awal" value={s?.settings.opening_cash_balance ?? 0} />
-        <Kpi label="Total Kas Masuk" value={s?.masuk ?? 0} tone="positive" />
-        <Kpi label="Total Kas Keluar" value={s?.keluar ?? 0} tone="negative" />
-        <Kpi label="Saldo Kas Akhir" value={s?.saldoKas ?? 0} />
+        <Kpi label="Saldo Awal Kas" value={s?.settings.opening_cash_balance ?? 0} />
+        <Kpi label="Total Kas Masuk" value={s?.kasMasuk ?? 0} tone="positive" />
+        <Kpi label="Total Kas Keluar" value={s?.kasKeluar ?? 0} tone="negative" />
+        <Kpi label="Saldo Kas" value={s?.saldoKas ?? 0} />
       </div>
 
       <Panel title="Riwayat Kas">
