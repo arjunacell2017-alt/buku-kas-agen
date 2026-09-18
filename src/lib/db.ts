@@ -76,10 +76,19 @@ export async function fetchSaldo() {
   let feeTunai = 0;
   let feeSaldo = 0;
   let biayaTransaksi = 0;
+  // Kredit = seluruh mutasi rekening positif, Debit = nilai absolut mutasi negatif.
+  let kredit = 0;
+  let debit = 0;
+  const catatMutasiBank = (m: number) => {
+    if (m > 0) kredit += m;
+    else if (m < 0) debit += -m;
+  };
+
   for (const r of tx.data ?? []) {
     const m = hitungMutasi(r);
     mutasiKasTx += m.mutasiKas;
     mutasiBankTx += m.mutasiRekening;
+    catatMutasiBank(m.mutasiRekening);
     if (r.fee_method === "Saldo") feeSaldo += Number(r.fee);
     else feeTunai += Number(r.fee);
     biayaTransaksi += m.biaya;
@@ -91,11 +100,16 @@ export async function fetchSaldo() {
   const keluar = (kas.data ?? [])
     .filter((r) => r.type === "Kas Keluar")
     .reduce((a, r) => a + Number(r.amount), 0);
-  const debit = (bank.data ?? []).reduce((a, r) => a + Number(r.debit), 0);
-  const kredit = (bank.data ?? []).reduce((a, r) => a + Number(r.credit), 0);
+
+  let mutasiBankManual = 0;
+  for (const r of bank.data ?? []) {
+    const m = Number(r.credit) - Number(r.debit);
+    mutasiBankManual += m;
+    catatMutasiBank(m);
+  }
 
   const saldoKas = settings.opening_cash_balance + mutasiKasTx + masuk - keluar;
-  const saldoBank = settings.opening_bank_balance + mutasiBankTx + kredit - debit;
+  const saldoBank = settings.opening_bank_balance + kredit - debit;
 
   return {
     settings,
@@ -105,6 +119,7 @@ export async function fetchSaldo() {
     kredit,
     mutasiKasTx,
     mutasiBankTx,
+    mutasiBankManual,
     feeTunai,
     feeSaldo,
     totalFee: feeTunai + feeSaldo,
