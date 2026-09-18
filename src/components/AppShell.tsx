@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="px-3 pb-24 pt-4 md:px-6 md:pb-8">{children}</main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-6 border-t border-border bg-card md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-7 border-t border-border bg-card md:hidden">
         {MENU.map((m) => (
           <Link
             key={m.to}
