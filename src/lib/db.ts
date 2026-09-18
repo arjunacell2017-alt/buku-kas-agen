@@ -83,12 +83,20 @@ export async function fetchSaldo() {
     if (m > 0) kredit += m;
     else if (m < 0) debit += -m;
   };
+  // Kas Masuk = seluruh mutasi kas positif, Kas Keluar = nilai absolut mutasi negatif.
+  let kasMasuk = 0;
+  let kasKeluar = 0;
+  const catatMutasiKas = (m: number) => {
+    if (m > 0) kasMasuk += m;
+    else if (m < 0) kasKeluar += -m;
+  };
 
   for (const r of tx.data ?? []) {
     const m = hitungMutasi(r);
     mutasiKasTx += m.mutasiKas;
     mutasiBankTx += m.mutasiRekening;
     catatMutasiBank(m.mutasiRekening);
+    catatMutasiKas(m.mutasiKas);
     if (r.fee_method === "Saldo") feeSaldo += Number(r.fee);
     else feeTunai += Number(r.fee);
     biayaTransaksi += m.biaya;
