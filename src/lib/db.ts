@@ -102,12 +102,15 @@ export async function fetchSaldo() {
     biayaTransaksi += m.biaya;
   }
 
-  const masuk = (kas.data ?? [])
-    .filter((r) => r.type === "Kas Masuk")
-    .reduce((a, r) => a + Number(r.amount), 0);
-  const keluar = (kas.data ?? [])
-    .filter((r) => r.type === "Kas Keluar")
-    .reduce((a, r) => a + Number(r.amount), 0);
+  // Catatan kas manual ikut dihitung sebagai mutasi kas.
+  let masuk = 0;
+  let keluar = 0;
+  for (const r of kas.data ?? []) {
+    const amt = Number(r.amount);
+    if (r.type === "Kas Masuk") masuk += amt;
+    else keluar += amt;
+    catatMutasiKas(r.type === "Kas Masuk" ? amt : -amt);
+  }
 
   let mutasiBankManual = 0;
   for (const r of bank.data ?? []) {
@@ -116,13 +119,15 @@ export async function fetchSaldo() {
     catatMutasiBank(m);
   }
 
-  const saldoKas = settings.opening_cash_balance + mutasiKasTx + masuk - keluar;
+  const saldoKas = settings.opening_cash_balance + kasMasuk - kasKeluar;
   const saldoBank = settings.opening_bank_balance + kredit - debit;
 
   return {
     settings,
     masuk,
     keluar,
+    kasMasuk,
+    kasKeluar,
     debit,
     kredit,
     mutasiKasTx,
