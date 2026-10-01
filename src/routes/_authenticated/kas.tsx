@@ -7,8 +7,12 @@ import { rupiah, tanggalID, todayISO, parseNominal } from "@/lib/format";
 import { KATEGORI_KAS } from "@/lib/konstanta";
 import { Kpi, PageHeader, Panel, Empty } from "@/components/ui-kit";
 import { Modal, Field, inputClass, btnPrimary, btnGhost } from "@/components/Modal";
+import { ArrowDownToLine, ArrowUpFromLine, Wallet, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/kas")({
+  head: () => pageMeta("Kas", "Posisi dan mutasi uang kas fisik Agen BRILink."),
   component: KasPage,
 });
 
@@ -79,26 +83,23 @@ function KasPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         title="Kas"
+        subtitle="Posisi dan mutasi uang kas fisik."
         action={
           <div className="flex gap-2">
-            <button className={btnPrimary} onClick={() => buka("Kas Masuk")}>
-              Tambah Kas Masuk
-            </button>
-            <button className={btnGhost} onClick={() => buka("Kas Keluar")}>
-              Tambah Kas Keluar
-            </button>
+            <Button onClick={() => buka("Kas Masuk")}><ArrowDownToLine /> Kas Masuk</Button>
+            <Button variant="outline" onClick={() => buka("Kas Keluar")}><ArrowUpFromLine /> Kas Keluar</Button>
           </div>
         }
       />
 
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label="Saldo Awal Kas" value={s?.settings.opening_cash_balance ?? 0} />
-        <Kpi label="Total Kas Masuk" value={s?.kasMasuk ?? 0} tone="positive" />
-        <Kpi label="Total Kas Keluar" value={s?.kasKeluar ?? 0} tone="negative" />
-        <Kpi label="Saldo Kas" value={s?.saldoKas ?? 0} />
+        <Kpi label="Total Kas Masuk" value={s?.kasMasuk ?? 0} tone="positive" icon={<ArrowDownToLine />} />
+        <Kpi label="Total Kas Keluar" value={s?.kasKeluar ?? 0} tone="negative" icon={<ArrowUpFromLine />} />
+        <Kpi label="Saldo Kas" value={s?.saldoKas ?? 0} icon={<Wallet />} prominent />
       </div>
 
       <Panel title="Riwayat Kas">
@@ -108,7 +109,7 @@ function KasPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-muted-foreground">
+                <tr className="border-b border-border bg-surface-subtle text-left text-xs font-semibold uppercase text-muted-foreground">
                   <th className="py-2">Tanggal</th>
                   <th className="py-2">Jenis</th>
                   <th className="py-2">Kategori</th>
@@ -119,7 +120,7 @@ function KasPage() {
               </thead>
               <tbody>
                 {(list.data?.rows ?? []).map((r) => (
-                  <tr key={r.id} className="border-t border-border">
+                  <tr key={r.id} className="border-t border-border/70 hover:bg-secondary/40">
                     <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
                     <td
                       className={`py-2 ${r.type === "Kas Masuk" ? "text-success" : "text-destructive"}`}
@@ -130,14 +131,14 @@ function KasPage() {
                     <td className="py-2 text-right tabular-nums">{rupiah(r.amount)}</td>
                     <td className="py-2 text-muted-foreground">{r.description ?? "-"}</td>
                     <td className="py-2 text-right">
-                      <button
-                        className="text-xs text-destructive underline"
+                      <Button
+                        variant="ghost" size="icon" className="text-destructive" aria-label="Hapus catatan kas"
                         onClick={() => {
                           if (confirm("Hapus catatan kas ini?")) hapus.mutate(r.id);
                         }}
                       >
-                        Hapus
-                      </button>
+                        <Trash2 />
+                      </Button>
                     </td>
                   </tr>
                 ))}
