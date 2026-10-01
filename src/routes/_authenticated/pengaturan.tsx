@@ -5,8 +5,10 @@ import { fetchSaldo, saveSettings, type Settings } from "@/lib/db";
 import { rupiah } from "@/lib/format";
 import { PageHeader, Panel, StatusBadge } from "@/components/ui-kit";
 import { Field, inputClass, btnPrimary } from "@/components/Modal";
+import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/pengaturan")({
+  head: () => pageMeta("Pengaturan", "Atur saldo awal dan angka aktual untuk rekonsiliasi."),
   component: PengaturanPage,
 });
 
@@ -33,8 +35,8 @@ function PengaturanPage() {
   const totalAwal = form.opening_cash_balance + form.opening_bank_balance;
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Pengaturan Saldo Awal" />
+    <div className="space-y-6">
+      <PageHeader title="Pengaturan" subtitle="Kelola saldo awal dan rekonsiliasi pembukuan." />
 
       <Panel title="Saldo Awal / Modal Awal">
         <form
@@ -75,7 +77,7 @@ function PengaturanPage() {
               onChange={(e) => setForm({ ...form, opening_cash_balance: num(e.target.value) })}
             />
           </Field>
-          <div className="sm:col-span-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
+          <div className="sm:col-span-2 rounded-lg border border-border bg-secondary/50 px-4 py-3 text-sm">
             Total Dana Awal: <span className="font-semibold tabular-nums">{rupiah(totalAwal)}</span>
           </div>
           <div className="sm:col-span-2">

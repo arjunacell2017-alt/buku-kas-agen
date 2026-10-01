@@ -6,8 +6,12 @@ import { fetchSaldo, getUserId, saveSettings } from "@/lib/db";
 import { rupiah, tanggalID, todayISO, parseNominal } from "@/lib/format";
 import { Kpi, PageHeader, Panel, Empty, StatusBadge } from "@/components/ui-kit";
 import { Modal, Field, inputClass, btnPrimary, btnGhost } from "@/components/Modal";
+import { ArrowDownToLine, ArrowUpFromLine, Landmark, Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/rekening")({
+  head: () => pageMeta("Rekening", "Posisi dan mutasi saldo rekening agen."),
   component: RekeningPage,
 });
 
@@ -89,21 +93,20 @@ function RekeningPage() {
   const maksHal = Math.max(0, Math.ceil((list.data?.count ?? 0) / PER_HAL) - 1);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         title="Rekening"
+        subtitle="Posisi dan mutasi saldo rekening agen."
         action={
-          <button className={btnPrimary} onClick={() => setOpen(true)}>
-            Tambah Mutasi
-          </button>
+          <Button onClick={() => setOpen(true)}><Plus /> Tambah Mutasi</Button>
         }
       />
 
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label="Saldo Awal Rekening" value={s?.settings.opening_bank_balance ?? 0} />
-        <Kpi label="Total Kredit (Masuk)" value={s?.kredit ?? 0} tone="positive" />
-        <Kpi label="Total Debit (Keluar)" value={s?.debit ?? 0} tone="negative" />
-        <Kpi label="Saldo Rekening" value={s?.saldoBank ?? 0} />
+        <Kpi label="Total Kredit (Masuk)" value={s?.kredit ?? 0} tone="positive" icon={<ArrowDownToLine />} />
+        <Kpi label="Total Debit (Keluar)" value={s?.debit ?? 0} tone="negative" icon={<ArrowUpFromLine />} />
+        <Kpi label="Saldo Rekening" value={s?.saldoBank ?? 0} icon={<Landmark />} prominent />
       </div>
 
       <Panel title="Rekonsiliasi Rekening">
@@ -143,7 +146,7 @@ function RekeningPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-muted-foreground">
+                <tr className="border-b border-border bg-surface-subtle text-left text-xs font-semibold uppercase text-muted-foreground">
                   <th className="py-2">Tanggal</th>
                   <th className="py-2">Rekening</th>
                   <th className="py-2">Jenis</th>
@@ -155,7 +158,7 @@ function RekeningPage() {
               </thead>
               <tbody>
                 {(list.data?.rows ?? []).map((r) => (
-                  <tr key={r.id} className="border-t border-border">
+                  <tr key={r.id} className="border-t border-border/70 hover:bg-secondary/40">
                     <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
                     <td className="py-2">{r.account_name}</td>
                     <td className="py-2">{r.transaction_type ?? "-"}</td>
@@ -163,14 +166,14 @@ function RekeningPage() {
                     <td className="py-2 text-right tabular-nums">{rupiah(r.credit)}</td>
                     <td className="py-2 text-muted-foreground">{r.description ?? "-"}</td>
                     <td className="py-2 text-right">
-                      <button
-                        className="text-xs text-destructive underline"
+                      <Button
+                        variant="ghost" size="icon" className="text-destructive" aria-label="Hapus mutasi rekening"
                         onClick={() => {
                           if (confirm("Hapus mutasi ini?")) hapus.mutate(r.id);
                         }}
                       >
-                        Hapus
-                      </button>
+                        <Trash2 />
+                      </Button>
                     </td>
                   </tr>
                 ))}

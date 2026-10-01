@@ -21,8 +21,12 @@ import {
 } from "@/lib/konstanta";
 import { PageHeader, Panel, Empty } from "@/components/ui-kit";
 import { Modal, Field, inputClass, btnPrimary, btnGhost } from "@/components/Modal";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/transaksi")({
+  head: () => pageMeta("Transaksi", "Kelola transaksi dan mutasi dana Agen BRILink."),
   component: TransaksiPage,
 });
 
@@ -142,33 +146,33 @@ function TransaksiPage() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         title="Transaksi"
+        subtitle="Kelola seluruh transaksi AgenBRILink."
         action={
-          <button
-            className={btnPrimary}
+          <Button
             onClick={() => {
               setForm(kosong());
               setOpen(true);
             }}
           >
-            Tambah Transaksi
-          </button>
+            <Plus /> Tambah Transaksi
+          </Button>
         }
       />
 
       <Panel>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <input
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="relative"><Search className="absolute left-3 top-3 size-4 text-muted-foreground" /><input
             placeholder="Cari keterangan / no. transaksi"
             value={cari}
             onChange={(e) => {
               setHalaman(0);
               setCari(e.target.value);
             }}
-            className={inputClass}
-          />
+            className={`${inputClass} pl-9`}
+          /></div>
           <select
             value={jenis}
             onChange={(e) => {
@@ -212,7 +216,7 @@ function TransaksiPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-muted-foreground">
+                <tr className="border-b border-border bg-surface-subtle text-left text-xs font-semibold uppercase text-muted-foreground">
                   <th className="py-2">Tanggal</th>
                   <th className="py-2">Jam</th>
                   <th className="py-2">Jenis</th>
@@ -229,10 +233,10 @@ function TransaksiPage() {
                 {(list.data?.rows ?? []).map((r) => {
                   const m = hitungMutasi(r);
                   return (
-                    <tr key={r.id} className="border-t border-border">
+                    <tr key={r.id} className="border-t border-border/70 hover:bg-secondary/40">
                       <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
                       <td className="py-2">{jamID(r.transaction_time)}</td>
-                      <td className="py-2 whitespace-nowrap">{r.transaction_type}</td>
+                       <td className="py-2 whitespace-nowrap"><span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-primary">{r.transaction_type}</span></td>
                       <td className="py-2 text-right tabular-nums">{rupiah(r.amount)}</td>
                       <td className="py-2 text-right tabular-nums">{rupiah(r.fee)}</td>
                       <td className="py-2">{r.fee_method}</td>
@@ -248,8 +252,8 @@ function TransaksiPage() {
                       </td>
                       <td className="py-2 text-muted-foreground">{r.description ?? "-"}</td>
                       <td className="py-2 text-right whitespace-nowrap">
-                        <button
-                          className="text-xs text-primary underline"
+                         <Button
+                           variant="ghost" size="icon" aria-label="Edit transaksi"
                           onClick={() => {
                             setForm({
                               id: r.id,
@@ -268,10 +272,10 @@ function TransaksiPage() {
                             setOpen(true);
                           }}
                         >
-                          Edit
-                        </button>
-                        <button
-                          className="ml-3 text-xs text-destructive underline"
+                           <Pencil />
+                         </Button>
+                         <Button
+                           variant="ghost" size="icon" className="text-destructive" aria-label="Hapus transaksi"
                           onClick={() => {
                             if (
                               confirm(
@@ -281,8 +285,8 @@ function TransaksiPage() {
                               hapus.mutate(r.id);
                           }}
                         >
-                          Hapus
-                        </button>
+                           <Trash2 />
+                         </Button>
                       </td>
                     </tr>
                   );
@@ -318,13 +322,14 @@ function TransaksiPage() {
         onClose={() => setOpen(false)}
       >
         <form
-          className="grid gap-3 sm:grid-cols-2"
+           className="grid gap-4 sm:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
             simpan.mutate(form);
           }}
         >
-          <Field label="Tanggal">
+           <div className="sm:col-span-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">Informasi Transaksi</div>
+           <Field label="Tanggal">
             <input
               type="date"
               required
@@ -361,7 +366,8 @@ function TransaksiPage() {
               ))}
             </select>
           </Field>
-          <Field label="Nominal">
+           <div className="sm:col-span-2 mt-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">Nilai & Fee</div>
+           <Field label="Nominal">
             <input
               inputMode="numeric"
               required
@@ -391,7 +397,8 @@ function TransaksiPage() {
               ))}
             </select>
           </Field>
-          <Field label="Metode pembayaran biaya">
+           <div className="sm:col-span-2 mt-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">Biaya & Metode</div>
+           <Field label="Metode pembayaran biaya">
             <select
               className={inputClass}
               value={form.cost_method}
@@ -439,7 +446,7 @@ function TransaksiPage() {
             </Field>
           </div>
 
-          <div className="sm:col-span-2 rounded-md border border-border bg-muted/30 p-3 text-xs">
+           <div className="sm:col-span-2 rounded-lg border border-border bg-secondary/50 p-4 text-xs">
             <p className="mb-1 font-medium">Dampak otomatis transaksi ini</p>
             <div className="grid grid-cols-3 gap-2 tabular-nums">
               <div>

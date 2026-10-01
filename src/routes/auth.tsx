@@ -12,6 +12,8 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Masuk untuk mengelola pembukuan Agen BRILink Anda." },
       { property: "og:title", content: "Masuk — Buku Kas Agen BRILink" },
       { property: "og:description", content: "Masuk ke pembukuan Agen BRILink." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,
@@ -66,8 +68,8 @@ function AuthPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm rounded-lg border border-border bg-card p-5">
-        <h1 className="text-lg font-semibold">Buku Kas Agen BRILink</h1>
+      <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="mb-5 flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-lg bg-primary text-lg font-bold text-primary-foreground">B</div><div><h1 className="text-lg font-bold">Buku Kas BRILink</h1><p className="text-xs text-muted-foreground">Pembukuan Agen</p></div></div>
         <p className="mb-4 text-sm text-muted-foreground">
           {mode === "masuk" ? "Masuk ke akun Anda" : "Buat akun baru"}
         </p>

@@ -6,8 +6,10 @@ import { fetchSaldo, fetchRingkasan } from "@/lib/db";
 import { rupiah, rangeFromPeriode, type Periode } from "@/lib/format";
 import { PageHeader, Panel, StatusBadge } from "@/components/ui-kit";
 import { FilterPeriode } from "@/components/FilterPeriode";
+import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/laporan")({
+  head: () => pageMeta("Laporan Keuangan", "Ringkasan transaksi, laba rugi, arus kas, dan rekonsiliasi."),
   component: LaporanPage,
 });
 
@@ -63,8 +65,8 @@ function LaporanPage() {
   const s = saldo.data;
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Laporan" />
+    <div className="space-y-6">
+      <PageHeader title="Laporan Keuangan" subtitle="Ringkasan pembukuan untuk periode yang dipilih." />
 
       <FilterPeriode
         periode={periode}

@@ -5,8 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { rupiah, rupiahMutasi, tanggalID, jamID } from "@/lib/format";
 import { PageHeader, Panel, Empty } from "@/components/ui-kit";
 import { btnGhost } from "@/components/Modal";
+import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/mutasi")({
+  head: () => pageMeta("Mutasi Dana", "Riwayat mutasi rekening dan kas beserta saldo berjalan."),
   component: MutasiPage,
 });
 
@@ -37,8 +39,8 @@ function MutasiPage() {
   const warna = (n: number) => (n < 0 ? "text-destructive" : "text-success");
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="Mutasi Dana" />
+    <div className="space-y-6">
+      <PageHeader title="Mutasi Dana" subtitle="Pantau seluruh pergerakan rekening dan kas." />
       <Panel title={`Buku Mutasi (${total})`}>
         {(list.data?.rows ?? []).length === 0 ? (
           <Empty />
@@ -46,7 +48,7 @@ function MutasiPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-muted-foreground">
+                <tr className="border-b border-border bg-surface-subtle text-left text-xs font-semibold uppercase text-muted-foreground">
                   <th className="py-2">Tanggal</th>
                   <th className="py-2">Jam</th>
                   <th className="py-2">Jenis</th>
@@ -61,10 +63,10 @@ function MutasiPage() {
               </thead>
               <tbody>
                 {(list.data?.rows ?? []).map((r) => (
-                  <tr key={r.transaction_id} className="border-t border-border">
+                  <tr key={r.transaction_id} className="border-t border-border/70 hover:bg-secondary/40">
                     <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
                     <td className="py-2">{jamID(r.transaction_time)}</td>
-                    <td className="py-2 whitespace-nowrap">{r.transaction_type}</td>
+                    <td className="py-2 whitespace-nowrap"><span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-primary">{r.transaction_type}</span></td>
                     <td className="py-2 text-right tabular-nums">{rupiah(r.amount)}</td>
                     <td className="py-2 text-right tabular-nums">{rupiah(r.fee)}</td>
                     <td className="py-2">{r.fee_method}</td>

@@ -49,7 +49,7 @@ function Dashboard() {
         .select("id,transaction_date,transaction_time,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,description")
         .order("transaction_date", { ascending: false })
         .order("transaction_time", { ascending: false })
-        .limit(5);
+        .limit(10);
       if (error) throw error;
       return data ?? [];
     },
@@ -94,12 +94,18 @@ function Dashboard() {
 
       <div className="space-y-3">
         <SectionHeading title="Pendapatan & Biaya" description={`${tanggalID(from)} – ${tanggalID(to)}`} />
+        <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Kpi label="Total Transaksi" value={String(r?.jumlah ?? 0)} />
+          <Kpi label="Total Nilai Transaksi" value={r?.totalNominal ?? 0} />
+          <Kpi label="Biaya Transaksi" value={r?.biayaTransaksi ?? 0} />
+        </div>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <Kpi label="Total Fee" value={r?.totalFee ?? 0} tone="positive" />
           <Kpi label="Fee Tunai" value={r?.feeTunai ?? 0} />
           <Kpi label="Fee Saldo" value={r?.feeSaldo ?? 0} />
           <Kpi label="Total Biaya" value={r?.totalBiaya ?? 0} tone="negative" />
           <Kpi label="Laba Bersih" value={r?.laba ?? 0} tone={(r?.laba ?? 0) >= 0 ? "positive" : "negative"} />
+          <Kpi label="Biaya Operasional" value={r?.biayaOperasional ?? 0} />
         </div>
       </div>
 

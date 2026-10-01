@@ -7,8 +7,12 @@ import { rupiah, tanggalID, todayISO, parseNominal, rangeFromPeriode } from "@/l
 import { KATEGORI_BIAYA } from "@/lib/konstanta";
 import { Kpi, PageHeader, Panel, Empty } from "@/components/ui-kit";
 import { Modal, Field, inputClass, btnPrimary, btnGhost } from "@/components/Modal";
+import { Plus, ReceiptText, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/biaya")({
+  head: () => pageMeta("Biaya Operasional", "Catat dan pantau biaya operasional Agen BRILink."),
   component: BiayaPage,
 });
 
@@ -88,18 +92,17 @@ function BiayaPage() {
   const totalBulan = (bulanIni.data ?? []).reduce((a, r) => a + Number(r.amount), 0);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         title="Biaya Operasional"
+        subtitle="Pantau pengeluaran operasional agen."
         action={
-          <button className={btnPrimary} onClick={() => setOpen(true)}>
-            Tambah Biaya
-          </button>
+          <Button onClick={() => setOpen(true)}><Plus /> Tambah Biaya</Button>
         }
       />
 
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        <Kpi label="Total Biaya Bulan Ini" value={totalBulan} tone="negative" />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi label="Total Biaya Bulan Ini" value={totalBulan} tone="negative" icon={<ReceiptText />} prominent />
         <Kpi label="Jumlah Catatan" value={String((bulanIni.data ?? []).length)} />
       </div>
 
@@ -110,7 +113,7 @@ function BiayaPage() {
           <table className="w-full text-sm">
             <tbody>
               {perKategori.map((r) => (
-                <tr key={r.kategori} className="border-t border-border first:border-t-0">
+                <tr key={r.kategori} className="border-t border-border/70 first:border-t-0 hover:bg-secondary/40">
                   <td className="py-2">{r.kategori}</td>
                   <td className="py-2 text-right tabular-nums">{rupiah(r.total)}</td>
                 </tr>
@@ -127,7 +130,7 @@ function BiayaPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-muted-foreground">
+                <tr className="border-b border-border bg-surface-subtle text-left text-xs font-semibold uppercase text-muted-foreground">
                   <th className="py-2">Tanggal</th>
                   <th className="py-2">Kategori</th>
                   <th className="py-2 text-right">Nominal</th>
@@ -137,20 +140,20 @@ function BiayaPage() {
               </thead>
               <tbody>
                 {(terbaru.data ?? []).map((r) => (
-                  <tr key={r.id} className="border-t border-border">
+                  <tr key={r.id} className="border-t border-border/70 hover:bg-secondary/40">
                     <td className="py-2 whitespace-nowrap">{tanggalID(r.expense_date)}</td>
                     <td className="py-2">{r.category}</td>
                     <td className="py-2 text-right tabular-nums">{rupiah(r.amount)}</td>
                     <td className="py-2 text-muted-foreground">{r.description ?? "-"}</td>
                     <td className="py-2 text-right">
-                      <button
-                        className="text-xs text-destructive underline"
+                      <Button
+                        variant="ghost" size="icon" className="text-destructive" aria-label="Hapus biaya"
                         onClick={() => {
                           if (confirm("Hapus biaya ini?")) hapus.mutate(r.id);
                         }}
                       >
-                        Hapus
-                      </button>
+                        <Trash2 />
+                      </Button>
                     </td>
                   </tr>
                 ))}
