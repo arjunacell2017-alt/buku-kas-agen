@@ -46,7 +46,7 @@ function Dashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("transactions")
-          "id,transaction_date,transaction_time,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,description")
+        .select("id,transaction_date,transaction_time,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,description")
         .order("transaction_date", { ascending: false })
         .order("transaction_time", { ascending: false })
         .limit(5);
