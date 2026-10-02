@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/transaksi")({
-  head: () => pageMeta("Transaksi", "Kelola transaksi dan mutasi dana Agen BRILink."),
+  head: () => pageMeta("Transaksi", "Kelola transaksi dan mutasi dana agen."),
   component: TransaksiPage,
 });
 
@@ -149,7 +149,7 @@ function TransaksiPage() {
     <div className="space-y-6">
       <PageHeader
         title="Transaksi"
-        subtitle="Kelola seluruh transaksi AgenBRILink."
+        subtitle="Kelola seluruh transaksi agen."
         action={
           <Button
             onClick={() => {

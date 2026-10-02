@@ -19,7 +19,7 @@ export function Modal({
       <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-xl border border-border bg-card shadow-2xl sm:rounded-xl">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card px-5 py-4">
           <div>
-            <p className="text-xs font-medium text-primary">Buku Kas BRILink</p>
+            <p className="text-xs font-medium text-primary">Buku Kas Agen</p>
             <h2 className="mt-0.5 text-lg font-bold text-foreground">{title}</h2>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Tutup dialog">

@@ -49,8 +49,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex h-[72px] items-center gap-3 border-b border-sidebar-border px-5">
           <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-lg font-bold text-primary-foreground">B</div>
           <div>
-            <p className="text-sm font-bold text-sidebar-accent-foreground">Buku Kas BRILink</p>
-            <p className="text-xs text-sidebar-foreground">Pembukuan Agen</p>
+            <p className="text-sm font-bold text-sidebar-accent-foreground">Buku Kas Agen</p>
+            <p className="text-xs text-sidebar-foreground">Pembukuan Agen Layanan Keuangan</p>
           </div>
           <Button variant="ghost" size="icon" className="ml-auto text-sidebar-foreground md:hidden" onClick={() => setMenuOpen(false)} aria-label="Tutup menu"><X /></Button>
         </div>
@@ -99,7 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs font-semibold text-foreground">AgenBRILink</p>
+            <p className="text-xs font-semibold text-foreground">Buku Kas Agen</p>
             <p className="text-xs text-muted-foreground">{tanggal}</p>
           </div>
         </header>

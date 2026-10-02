@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => pageMeta("Dashboard", "Ringkasan saldo, pendapatan, biaya, dan rekonsiliasi Agen BRILink."),
+  head: () => pageMeta("Dashboard", "Ringkasan saldo, pendapatan, biaya, dan rekonsiliasi agen."),
   component: Dashboard,
 });
 
@@ -64,7 +64,7 @@ function Dashboard() {
     <div className="space-y-6">
       <PageHeader
         title="Ringkasan Keuangan"
-        subtitle="Pantau posisi dana dan aktivitas AgenBRILink Anda."
+        subtitle="Pantau posisi dana dan aktivitas agen Anda."
         action={<Button onClick={() => navigate({ to: "/transaksi" })}><Plus /> Tambah Transaksi</Button>}
       />
 
@@ -165,7 +165,7 @@ function Dashboard() {
 
       <Panel title="Transaksi Terbaru">
         {(terbaru.data ?? []).length === 0 ? (
-          <Empty text="Belum ada transaksi" description="Mulai catat transaksi AgenBRILink Anda." action={<Button onClick={() => navigate({ to: "/transaksi" })}><Receipt /> Tambah Transaksi</Button>} />
+          <Empty text="Belum ada transaksi" description="Mulai catat transaksi agen Anda." action={<Button onClick={() => navigate({ to: "/transaksi" })}><Receipt /> Tambah Transaksi</Button>} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

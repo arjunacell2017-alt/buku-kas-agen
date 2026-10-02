@@ -4,16 +4,16 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Buku Kas Agen BRILink — Pembukuan Harian Sederhana" },
+      { title: "Buku Kas Agen — Pembukuan Harian Sederhana" },
       {
         name: "description",
         content:
-          "Catat transaksi, kas, saldo rekening, fee, biaya, dan laba bersih Agen BRILink dalam satu dashboard ringan.",
+          "Catat transaksi, kas, saldo rekening, fee, biaya, dan laba bersih agen dalam satu dashboard ringan.",
       },
-      { property: "og:title", content: "Buku Kas Agen BRILink" },
+      { property: "og:title", content: "Buku Kas Agen" },
       {
         property: "og:description",
-        content: "Pembukuan harian Agen BRILink yang ringan, cepat, dan mudah dipakai.",
+        content: "Pembukuan harian agen yang ringan, cepat, dan mudah dipakai.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -28,7 +28,7 @@ function Beranda() {
       <div className="w-full max-w-md text-center">
         <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-primary text-xl font-bold text-primary-foreground">B</div>
         <h1 className="text-2xl font-bold text-foreground">
-          Buku Kas Agen BRILink
+          Buku Kas Agen
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Pencatatan transaksi harian, kas, rekening, biaya operasional, laba bersih, dan

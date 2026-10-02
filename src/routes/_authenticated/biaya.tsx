@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/biaya")({
-  head: () => pageMeta("Biaya Operasional", "Catat dan pantau biaya operasional Agen BRILink."),
+  head: () => pageMeta("Biaya Operasional", "Catat dan pantau biaya operasional agen."),
   component: BiayaPage,
 });
 
