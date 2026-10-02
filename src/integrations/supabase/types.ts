@@ -50,6 +50,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_activity: {
+        Row: {
+          action: string
+          admin_id: string | null
+          client_id: string | null
+          client_label: string
+          created_at: string
+          detail: string | null
+          id: string
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          client_id?: string | null
+          client_label?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          client_id?: string | null
+          client_label?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       bank_transactions: {
         Row: {
           account_name: string
@@ -115,6 +145,48 @@ export type Database = {
           id?: string
           transaction_date?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      client_profiles: {
+        Row: {
+          active_from: string
+          active_until: string
+          agent_name: string
+          agent_type: string
+          created_at: string
+          email: string
+          owner_name: string
+          phone: string
+          suspended: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_from?: string
+          active_until?: string
+          agent_name?: string
+          agent_type?: string
+          created_at?: string
+          email?: string
+          owner_name?: string
+          phone?: string
+          suspended?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_from?: string
+          active_until?: string
+          agent_name?: string
+          agent_type?: string
+          created_at?: string
+          email?: string
+          owner_name?: string
+          phone?: string
+          suspended?: boolean
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -203,6 +275,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       ledger_view: {
@@ -230,10 +320,17 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      has_active_access: { Args: { _user_id: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "client"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -360,6 +457,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "client"],
+    },
   },
 } as const
