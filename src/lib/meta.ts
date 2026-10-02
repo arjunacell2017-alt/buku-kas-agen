@@ -1,5 +1,5 @@
 export function pageMeta(title: string, description: string) {
-  const fullTitle = `${title} — Buku Kas BRILink`;
+  const fullTitle = `${title} — Buku Kas Agen`;
   return {
     meta: [
       { title: fullTitle },

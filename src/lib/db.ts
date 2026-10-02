@@ -12,7 +12,7 @@ export type Settings = {
 };
 
 export const DEFAULT_SETTINGS: Settings = {
-  business_name: "Agen BRILink",
+  business_name: "Agen",
   start_date: new Date().toISOString().slice(0, 10),
   opening_cash_balance: 0,
   opening_bank_balance: 0,
