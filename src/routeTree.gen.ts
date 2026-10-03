@@ -22,6 +22,9 @@ import { Route as AuthenticatedPengaturanRouteImport } from './routes/_authentic
 import { Route as AuthenticatedRekeningRouteImport } from './routes/_authenticated/rekening'
 import { Route as AuthenticatedTransaksiRouteImport } from './routes/_authenticated/transaksi'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAktivitasRouteImport } from './routes/admin/aktivitas'
+import { Route as AdminClientRouteImport } from './routes/admin/client'
+import { Route as AdminPengaturanRouteImport } from './routes/admin/pengaturan'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -87,6 +90,21 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminAktivitasRoute = AdminAktivitasRouteImport.update({
+  id: '/aktivitas',
+  path: '/aktivitas',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminClientRoute = AdminClientRouteImport.update({
+  id: '/client',
+  path: '/client',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPengaturanRoute = AdminPengaturanRouteImport.update({
+  id: '/pengaturan',
+  path: '/pengaturan',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -100,6 +118,9 @@ export interface FileRoutesByFullPath {
   '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/rekening': typeof AuthenticatedRekeningRoute
   '/transaksi': typeof AuthenticatedTransaksiRoute
+  '/admin/aktivitas': typeof AdminAktivitasRoute
+  '/admin/client': typeof AdminClientRoute
+  '/admin/pengaturan': typeof AdminPengaturanRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -113,6 +134,9 @@ export interface FileRoutesByTo {
   '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/rekening': typeof AuthenticatedRekeningRoute
   '/transaksi': typeof AuthenticatedTransaksiRoute
+  '/admin/aktivitas': typeof AdminAktivitasRoute
+  '/admin/client': typeof AdminClientRoute
+  '/admin/pengaturan': typeof AdminPengaturanRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -129,6 +153,9 @@ export interface FileRoutesById {
   '/_authenticated/pengaturan': typeof AuthenticatedPengaturanRoute
   '/_authenticated/rekening': typeof AuthenticatedRekeningRoute
   '/_authenticated/transaksi': typeof AuthenticatedTransaksiRoute
+  '/admin/aktivitas': typeof AdminAktivitasRoute
+  '/admin/client': typeof AdminClientRoute
+  '/admin/pengaturan': typeof AdminPengaturanRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -145,6 +172,9 @@ export interface FileRouteTypes {
     | '/pengaturan'
     | '/rekening'
     | '/transaksi'
+    | '/admin/aktivitas'
+    | '/admin/client'
+    | '/admin/pengaturan'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -158,6 +188,9 @@ export interface FileRouteTypes {
     | '/pengaturan'
     | '/rekening'
     | '/transaksi'
+    | '/admin/aktivitas'
+    | '/admin/client'
+    | '/admin/pengaturan'
     | '/admin'
   id:
     | '__root__'
@@ -173,6 +206,9 @@ export interface FileRouteTypes {
     | '/_authenticated/pengaturan'
     | '/_authenticated/rekening'
     | '/_authenticated/transaksi'
+    | '/admin/aktivitas'
+    | '/admin/client'
+    | '/admin/pengaturan'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -276,6 +312,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/aktivitas': {
+      id: '/admin/aktivitas'
+      path: '/aktivitas'
+      fullPath: '/admin/aktivitas'
+      preLoaderRoute: typeof AdminAktivitasRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/client': {
+      id: '/admin/client'
+      path: '/client'
+      fullPath: '/admin/client'
+      preLoaderRoute: typeof AdminClientRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/pengaturan': {
+      id: '/admin/pengaturan'
+      path: '/pengaturan'
+      fullPath: '/admin/pengaturan'
+      preLoaderRoute: typeof AdminPengaturanRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
@@ -305,10 +362,16 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface AdminRouteRouteChildren {
+  AdminAktivitasRoute: typeof AdminAktivitasRoute
+  AdminClientRoute: typeof AdminClientRoute
+  AdminPengaturanRoute: typeof AdminPengaturanRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminAktivitasRoute: AdminAktivitasRoute,
+  AdminClientRoute: AdminClientRoute,
+  AdminPengaturanRoute: AdminPengaturanRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
