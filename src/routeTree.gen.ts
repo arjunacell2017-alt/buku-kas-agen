@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedBiayaRouteImport } from './routes/_authenticated/biaya'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -20,6 +21,10 @@ import { Route as AuthenticatedMutasiRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedPengaturanRouteImport } from './routes/_authenticated/pengaturan'
 import { Route as AuthenticatedRekeningRouteImport } from './routes/_authenticated/rekening'
 import { Route as AuthenticatedTransaksiRouteImport } from './routes/_authenticated/transaksi'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAktivitasRouteImport } from './routes/admin/aktivitas'
+import { Route as AdminClientRouteImport } from './routes/admin/client'
+import { Route as AdminPengaturanRouteImport } from './routes/admin/pengaturan'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,6 +33,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -75,9 +85,30 @@ const AuthenticatedTransaksiRoute = AuthenticatedTransaksiRouteImport.update({
   path: '/transaksi',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAktivitasRoute = AdminAktivitasRouteImport.update({
+  id: '/aktivitas',
+  path: '/aktivitas',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminClientRoute = AdminClientRouteImport.update({
+  id: '/client',
+  path: '/client',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPengaturanRoute = AdminPengaturanRouteImport.update({
+  id: '/pengaturan',
+  path: '/pengaturan',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/biaya': typeof AuthenticatedBiayaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -87,6 +118,10 @@ export interface FileRoutesByFullPath {
   '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/rekening': typeof AuthenticatedRekeningRoute
   '/transaksi': typeof AuthenticatedTransaksiRoute
+  '/admin/aktivitas': typeof AdminAktivitasRoute
+  '/admin/client': typeof AdminClientRoute
+  '/admin/pengaturan': typeof AdminPengaturanRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,11 +134,16 @@ export interface FileRoutesByTo {
   '/pengaturan': typeof AuthenticatedPengaturanRoute
   '/rekening': typeof AuthenticatedRekeningRoute
   '/transaksi': typeof AuthenticatedTransaksiRoute
+  '/admin/aktivitas': typeof AdminAktivitasRoute
+  '/admin/client': typeof AdminClientRoute
+  '/admin/pengaturan': typeof AdminPengaturanRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/biaya': typeof AuthenticatedBiayaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -113,11 +153,16 @@ export interface FileRoutesById {
   '/_authenticated/pengaturan': typeof AuthenticatedPengaturanRoute
   '/_authenticated/rekening': typeof AuthenticatedRekeningRoute
   '/_authenticated/transaksi': typeof AuthenticatedTransaksiRoute
+  '/admin/aktivitas': typeof AdminAktivitasRoute
+  '/admin/client': typeof AdminClientRoute
+  '/admin/pengaturan': typeof AdminPengaturanRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/auth'
     | '/biaya'
     | '/dashboard'
@@ -127,6 +172,10 @@ export interface FileRouteTypes {
     | '/pengaturan'
     | '/rekening'
     | '/transaksi'
+    | '/admin/aktivitas'
+    | '/admin/client'
+    | '/admin/pengaturan'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,10 +188,15 @@ export interface FileRouteTypes {
     | '/pengaturan'
     | '/rekening'
     | '/transaksi'
+    | '/admin/aktivitas'
+    | '/admin/client'
+    | '/admin/pengaturan'
+    | '/admin'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/admin'
     | '/auth'
     | '/_authenticated/biaya'
     | '/_authenticated/dashboard'
@@ -152,11 +206,16 @@ export interface FileRouteTypes {
     | '/_authenticated/pengaturan'
     | '/_authenticated/rekening'
     | '/_authenticated/transaksi'
+    | '/admin/aktivitas'
+    | '/admin/client'
+    | '/admin/pengaturan'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
 }
 
@@ -174,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -239,6 +305,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTransaksiRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/aktivitas': {
+      id: '/admin/aktivitas'
+      path: '/aktivitas'
+      fullPath: '/admin/aktivitas'
+      preLoaderRoute: typeof AdminAktivitasRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/client': {
+      id: '/admin/client'
+      path: '/client'
+      fullPath: '/admin/client'
+      preLoaderRoute: typeof AdminClientRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/pengaturan': {
+      id: '/admin/pengaturan'
+      path: '/pengaturan'
+      fullPath: '/admin/pengaturan'
+      preLoaderRoute: typeof AdminPengaturanRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
@@ -267,9 +361,28 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AdminRouteRouteChildren {
+  AdminAktivitasRoute: typeof AdminAktivitasRoute
+  AdminClientRoute: typeof AdminClientRoute
+  AdminPengaturanRoute: typeof AdminPengaturanRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminAktivitasRoute: AdminAktivitasRoute,
+  AdminClientRoute: AdminClientRoute,
+  AdminPengaturanRoute: AdminPengaturanRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
