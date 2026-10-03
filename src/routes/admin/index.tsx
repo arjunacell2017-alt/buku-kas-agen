@@ -23,7 +23,7 @@ function AdminDashboard() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <Kpi label="Total Client" value={String(data.length)} icon={<Users className="size-4" />} />
         <Kpi label="Client Aktif" value={String(hitung("ACTIVE"))} tone="positive" icon={<UserCheck className="size-4" />} />
-        <Kpi label={STATUS_LABEL.EXPIRING_SOON} value={String(hitung("EXPIRING_SOON"))} tone="warning" icon={<Clock className="size-4" />} />
+        <Kpi label={STATUS_LABEL.EXPIRING_SOON} value={String(hitung("EXPIRING_SOON"))} icon={<Clock className="size-4" />} />
         <Kpi label="Expired" value={String(hitung("EXPIRED"))} tone="negative" icon={<UserX className="size-4" />} />
         <Kpi label="Ditangguhkan" value={String(hitung("SUSPENDED"))} icon={<Ban className="size-4" />} />
       </div>
