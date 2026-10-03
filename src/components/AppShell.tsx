@@ -11,6 +11,10 @@ import {
   Receipt,
   ReceiptText,
   Settings,
+  Shield,
+  Users,
+  Activity,
+  BookOpen,
   Wallet,
   X,
 } from "lucide-react";
@@ -25,14 +29,22 @@ const MENU = [
   { to: "/rekening", label: "Rekening", icon: Landmark },
   { to: "/biaya", label: "Biaya Operasional", icon: ReceiptText },
   { to: "/laporan", label: "Laporan", icon: BarChart3 },
-] as const;
+];
 
-export function AppShell({ children }: { children: ReactNode }) {
+const ADMIN_MENU = [
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/client", label: "Client / Agen", icon: Users },
+  { to: "/admin/aktivitas", label: "Aktivitas", icon: Activity },
+];
+
+export function AppShell({ children, isAdmin = false, admin = false }: { children: ReactNode; isAdmin?: boolean; admin?: boolean }) {
+  const menu = admin ? ADMIN_MENU : MENU;
+  const settingsTo = admin ? "/admin/pengaturan" : "/pengaturan";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const title = MENU.find((item) => item.to === pathname)?.label ?? (pathname === "/pengaturan" ? "Pengaturan" : "Buku Kas");
+  const title = menu.find((item) => item.to === pathname)?.label ?? (pathname === settingsTo ? (admin ? "Pengaturan Admin" : "Pengaturan") : "Buku Kas");
   const tanggal = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric" }).format(new Date());
 
   async function keluar() {
@@ -50,14 +62,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-lg font-bold text-primary-foreground">B</div>
           <div>
             <p className="text-sm font-bold text-sidebar-accent-foreground">Buku Kas Agen</p>
-            <p className="text-xs text-sidebar-foreground">Pembukuan Agen Layanan Keuangan</p>
+            <p className="text-xs text-sidebar-foreground">{admin ? "Panel Administrator" : "Pembukuan Agen Layanan Keuangan"}</p>
           </div>
           <Button variant="ghost" size="icon" className="ml-auto text-sidebar-foreground md:hidden" onClick={() => setMenuOpen(false)} aria-label="Tutup menu"><X /></Button>
         </div>
         <nav className="flex-1 space-y-1 px-3 py-5">
-          {MENU.map((m) => (
+          {menu.map((m) => (
             <Link
               key={m.to}
+              activeOptions={{ exact: true }}
               to={m.to}
               onClick={() => setMenuOpen(false)}
               className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -70,14 +83,24 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         <div className="border-t border-sidebar-border p-3">
           <Link
-            to="/pengaturan"
+            to={settingsTo}
             onClick={() => setMenuOpen(false)}
             className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             activeProps={{ className: "bg-sidebar-accent text-sidebar-primary" }}
           >
             <Settings className="size-[18px]" />
-            Pengaturan
+            {admin ? "Pengaturan Admin" : "Pengaturan"}
           </Link>
+          {admin || isAdmin ? (
+            <Link
+              to={admin ? "/dashboard" : "/admin"}
+              onClick={() => setMenuOpen(false)}
+              className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              {admin ? <BookOpen className="size-[18px]" /> : <Shield className="size-[18px]" />}
+              {admin ? "Buku Kas Saya" : "Panel Admin"}
+            </Link>
+          ) : null}
           <Button
             variant="ghost"
             onClick={keluar}
