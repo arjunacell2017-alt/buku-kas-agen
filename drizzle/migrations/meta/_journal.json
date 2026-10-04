@@ -8,6 +8,13 @@
       "when": 1790932285029,
       "tag": "0000_closed_access_roles_clients",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791125163436,
+      "tag": "0001_ledger_fee_masuk",
+      "breakpoints": true
     }
   ]
 }
