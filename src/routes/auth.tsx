@@ -45,6 +45,12 @@ function AuthPage() {
   const [pesan, setPesan] = useState<string | null>(pesanAlasan(search.alasan, search.sampai));
   const [loading, setLoading] = useState(false);
 
+  async function lupa() {
+    if (!email) return setPesan("Isi email terlebih dahulu, lalu klik Lupa kata sandi.");
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
+    setPesan("Jika email terdaftar, tautan untuk membuat kata sandi baru telah dikirim.");
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setPesan(null);
@@ -90,6 +96,7 @@ function AuthPage() {
           </button>
         </form>
         {pesan ? <p className="mt-3 text-xs text-destructive">{pesan}</p> : null}
+        <button type="button" onClick={lupa} className="mt-3 w-full text-xs text-primary underline">Lupa kata sandi?</button>
         <p className="mt-5 text-center text-xs text-muted-foreground">Belum memiliki akses? Hubungi administrator.</p>
       </div>
     </main>
