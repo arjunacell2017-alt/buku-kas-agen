@@ -15,6 +15,13 @@
       "when": 1791125163436,
       "tag": "0001_ledger_fee_masuk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791192148612,
+      "tag": "0002_multi_rekening",
+      "breakpoints": true
     }
   ]
 }
