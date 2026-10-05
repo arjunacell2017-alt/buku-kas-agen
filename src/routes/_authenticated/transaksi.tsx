@@ -96,6 +96,8 @@ function TransaksiPage() {
 
   const simpan = useMutation({
     mutationFn: async (f: Form) => {
+      const feeMasuk = f.transaction_type === "Fee Masuk";
+      if (feeMasuk) f = { ...f, fee: "0", fee_method: "Saldo", transaction_cost: "0", cost_method: "Tidak Ada", payment_method: "Rekening" };
       const payload = {
         transaction_date: f.transaction_date,
         transaction_time: f.transaction_time || "00:00",
@@ -376,6 +378,7 @@ function TransaksiPage() {
               onChange={(e) => setForm({ ...form, amount: e.target.value.replace(/[^0-9]/g, "") })}
             />
           </Field>
+          {form.transaction_type !== "Fee Masuk" ? (<>
           <Field label="Fee (pendapatan agen)">
             <input
               inputMode="numeric"
@@ -435,6 +438,7 @@ function TransaksiPage() {
               ))}
             </select>
           </Field>
+          </>) : null}
           <div className="sm:col-span-2">
             <Field label="Keterangan">
               <input

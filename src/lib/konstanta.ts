@@ -7,6 +7,7 @@ export const JENIS_TRANSAKSI = [
   "Token PLN",
   "BRIVA",
   "Top Up",
+  "Fee Masuk",
   "Lainnya",
 ] as const;
 
