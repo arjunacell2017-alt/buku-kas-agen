@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { hitungMutasi } from "@/lib/aturan";
+import { hitungMutasi, mutasiPerRekening } from "@/lib/aturan";
 
 export type Settings = {
   id?: string;
@@ -19,6 +19,20 @@ export const DEFAULT_SETTINGS: Settings = {
   actual_cash_balance: 0,
   actual_bank_balance: 0,
 };
+
+export type Rekening = {
+  id: string;
+  bank_name: string;
+  account_number: string | null;
+  owner_name: string | null;
+  opening_balance: number;
+  start_date: string;
+  actual_balance: number;
+  status: string;
+};
+
+export const labelRekening = (r: { bank_name: string; account_number: string | null }) =>
+  r.account_number ? `${r.bank_name} - ****${r.account_number.slice(-4)}` : r.bank_name;
 
 export async function getUserId(): Promise<string> {
   const { data } = await supabase.auth.getUser();
@@ -54,36 +68,85 @@ export async function saveSettings(s: Settings) {
   if (error) throw error;
 }
 
+export async function fetchRekening(): Promise<Rekening[]> {
+  const { data, error } = await supabase
+    .from("bank_accounts")
+    .select("id,bank_name,account_number,owner_name,opening_balance,start_date,actual_balance,status")
+    .order("created_at");
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    ...r,
+    opening_balance: Number(r.opening_balance),
+    actual_balance: Number(r.actual_balance),
+  }));
+}
+
+export const rekeningQuery = { queryKey: ["rekening-list"], queryFn: fetchRekening };
+
+export async function saveRekening(r: Partial<Rekening> & { bank_name: string }) {
+  const payload = {
+    bank_name: r.bank_name,
+    account_number: r.account_number || null,
+    owner_name: r.owner_name || null,
+    opening_balance: Math.max(0, Number(r.opening_balance) || 0),
+    start_date: r.start_date,
+    ...(r.actual_balance !== undefined ? { actual_balance: r.actual_balance } : {}),
+    ...(r.status ? { status: r.status } : {}),
+  };
+  if (r.id) {
+    const { error } = await supabase.from("bank_accounts").update(payload).eq("id", r.id);
+    if (error) throw error;
+  } else {
+    const user_id = await getUserId();
+    const { error } = await supabase.from("bank_accounts").insert({ ...payload, user_id });
+    if (error) throw error;
+  }
+}
+
+export type PosisiRekening = Rekening & {
+  kredit: number;
+  debit: number;
+  saldo: number;
+  selisih: number;
+};
+
 /**
  * Posisi dana: saldo awal + seluruh mutasi (transaksi otomatis + catatan
  * kas/rekening manual). Saldo tidak pernah disimpan, selalu dihitung ulang.
+ * Saldo rekening dihitung per rekening lalu dijumlahkan.
  */
 export async function fetchSaldo() {
-  const [settings, tx, kas, bank] = await Promise.all([
+  const [settings, rekening, tx, kas, bank] = await Promise.all([
     fetchSettings(),
+    fetchRekening(),
     supabase
       .from("transactions")
-      .select("transaction_type,amount,fee,fee_method,transaction_cost,cost_method"),
+      .select(
+        "transaction_type,amount,fee,fee_method,transaction_cost,cost_method,account_id,cost_account_id",
+      ),
     supabase.from("cash_transactions").select("type,amount"),
-    supabase.from("bank_transactions").select("debit,credit"),
+    supabase.from("bank_transactions").select("debit,credit,account_id"),
   ]);
   if (tx.error) throw tx.error;
   if (kas.error) throw kas.error;
   if (bank.error) throw bank.error;
+
+  const fallbackId = rekening.find((r) => r.status === "aktif")?.id ?? rekening[0]?.id ?? "";
+  const perRek = new Map<string, { kredit: number; debit: number }>();
+  const catatRek = (id: string | null, m: number) => {
+    const key = id && perRek.has(id) ? id : id ?? fallbackId;
+    const p = perRek.get(key) ?? { kredit: 0, debit: 0 };
+    if (m > 0) p.kredit += m;
+    else if (m < 0) p.debit += -m;
+    perRek.set(key, p);
+  };
+  for (const r of rekening) perRek.set(r.id, { kredit: 0, debit: 0 });
 
   let mutasiKasTx = 0;
   let mutasiBankTx = 0;
   let feeTunai = 0;
   let feeSaldo = 0;
   let biayaTransaksi = 0;
-  // Kredit = seluruh mutasi rekening positif, Debit = nilai absolut mutasi negatif.
-  let kredit = 0;
-  let debit = 0;
-  const catatMutasiBank = (m: number) => {
-    if (m > 0) kredit += m;
-    else if (m < 0) debit += -m;
-  };
-  // Kas Masuk = seluruh mutasi kas positif, Kas Keluar = nilai absolut mutasi negatif.
   let kasMasuk = 0;
   let kasKeluar = 0;
   const catatMutasiKas = (m: number) => {
@@ -95,14 +158,13 @@ export async function fetchSaldo() {
     const m = hitungMutasi(r);
     mutasiKasTx += m.mutasiKas;
     mutasiBankTx += m.mutasiRekening;
-    catatMutasiBank(m.mutasiRekening);
+    for (const p of mutasiPerRekening(r)) catatRek(p.account_id, p.amount);
     catatMutasiKas(m.mutasiKas);
     if (r.fee_method === "Saldo") feeSaldo += Number(r.fee);
     else feeTunai += Number(r.fee);
     biayaTransaksi += m.biaya;
   }
 
-  // Catatan kas manual ikut dihitung sebagai mutasi kas.
   let masuk = 0;
   let keluar = 0;
   for (const r of kas.data ?? []) {
@@ -116,14 +178,31 @@ export async function fetchSaldo() {
   for (const r of bank.data ?? []) {
     const m = Number(r.credit) - Number(r.debit);
     mutasiBankManual += m;
-    catatMutasiBank(m);
+    catatRek(r.account_id, m);
   }
 
+  const perRekening: PosisiRekening[] = rekening.map((r) => {
+    const p = perRek.get(r.id) ?? { kredit: 0, debit: 0 };
+    const saldo = r.opening_balance + p.kredit - p.debit;
+    return { ...r, ...p, saldo, selisih: r.actual_balance - saldo };
+  });
+  // Mutasi tanpa rekening (hanya terjadi bila client belum punya rekening sama sekali)
+  const lepas = perRek.get("") ?? { kredit: 0, debit: 0 };
+
+  const sumR = (f: (r: PosisiRekening) => number) => perRekening.reduce((a, r) => a + f(r), 0);
+  const openingBank = sumR((r) => r.opening_balance);
+  const kredit = sumR((r) => r.kredit) + lepas.kredit;
+  const debit = sumR((r) => r.debit) + lepas.debit;
+  const aktualBank = sumR((r) => r.actual_balance);
+
   const saldoKas = settings.opening_cash_balance + kasMasuk - kasKeluar;
-  const saldoBank = settings.opening_bank_balance + kredit - debit;
+  const saldoBank = openingBank + kredit - debit;
 
   return {
     settings,
+    perRekening,
+    openingBank,
+    aktualBank,
     masuk,
     keluar,
     kasMasuk,
@@ -141,18 +220,20 @@ export async function fetchSaldo() {
     saldoBank,
     totalDana: saldoKas + saldoBank,
     selisihKas: settings.actual_cash_balance - saldoKas,
-    selisihBank: settings.actual_bank_balance - saldoBank,
+    selisihBank: aktualBank - saldoBank,
   };
 }
 
-/** Ringkasan transaksi + biaya untuk sebuah rentang tanggal */
-export async function fetchRingkasan(from: string, to: string) {
+/** Ringkasan transaksi + biaya untuk sebuah rentang tanggal (opsional per rekening) */
+export async function fetchRingkasan(from: string, to: string, accountId?: string) {
+  let txq = supabase
+    .from("transactions")
+    .select("transaction_type,amount,fee,fee_method,transaction_cost,cost_method")
+    .gte("transaction_date", from)
+    .lte("transaction_date", to);
+  if (accountId) txq = txq.eq("account_id", accountId);
   const [tx, exp] = await Promise.all([
-    supabase
-      .from("transactions")
-      .select("transaction_type,amount,fee,fee_method,transaction_cost,cost_method")
-      .gte("transaction_date", from)
-      .lte("transaction_date", to),
+    txq,
     supabase.from("expenses").select("amount").gte("expense_date", from).lte("expense_date", to),
   ]);
   if (tx.error) throw tx.error;
@@ -177,7 +258,9 @@ export async function fetchRingkasan(from: string, to: string) {
     perJenis.set(r.transaction_type, p);
   }
 
-  const biayaOperasional = (exp.data ?? []).reduce((a, r) => a + Number(r.amount), 0);
+  const biayaOperasional = accountId
+    ? 0
+    : (exp.data ?? []).reduce((a, r) => a + Number(r.amount), 0);
   const totalFee = feeTunai + feeSaldo;
   const totalBiaya = biayaOperasional + biayaTransaksi;
 
