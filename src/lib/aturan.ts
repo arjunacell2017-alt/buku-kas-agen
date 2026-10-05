@@ -64,3 +64,21 @@ export function hitungMutasi(t: InputTransaksi): Mutasi {
 }
 
 export const tandaRupiah = (n: number) => (n > 0 ? "+" : "");
+
+/**
+ * Pecah mutasi rekening per rekening bank.
+ * Nominal + fee saldo → rekening transaksi; biaya saldo → rekening biaya
+ * (bila kosong, rekening transaksi). Jumlahnya selalu = mutasiRekening.
+ */
+export function mutasiPerRekening(
+  t: InputTransaksi & { account_id?: string | null; cost_account_id?: string | null },
+): { account_id: string | null; amount: number }[] {
+  const m = hitungMutasi(t);
+  const biayaSaldo = t.transaction_type !== "Fee Masuk" && t.cost_method === "Saldo" ? m.biaya : 0;
+  const utama = m.mutasiRekening + biayaSaldo;
+  const out: { account_id: string | null; amount: number }[] = [];
+  if (utama !== 0) out.push({ account_id: t.account_id ?? null, amount: utama });
+  if (biayaSaldo !== 0)
+    out.push({ account_id: t.cost_account_id ?? t.account_id ?? null, amount: -biayaSaldo });
+  return out;
+}
