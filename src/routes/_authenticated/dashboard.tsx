@@ -124,7 +124,7 @@ function Dashboard() {
           <Baris label="Rekening pembukuan" value={rupiah(s?.saldoBank ?? 0)} />
           <Baris
             label="Saldo rekening aktual"
-            value={rupiah(s?.settings.actual_bank_balance ?? 0)}
+            value={rupiah(s?.aktualBank ?? 0)}
           />
           <Baris label="Selisih rekening" value={rupiah(s?.selisihBank ?? 0)} bold />
           <div className="pt-2">
