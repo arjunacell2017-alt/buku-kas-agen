@@ -121,7 +121,7 @@ function LaporanPage() {
           <div>
             <p className="mb-1 text-xs font-medium text-muted-foreground">REKENING</p>
             <Baris label="Rekening pembukuan" value={rupiah(s?.saldoBank ?? 0)} />
-            <Baris label="Saldo aktual" value={rupiah(s?.settings.actual_bank_balance ?? 0)} />
+            <Baris label="Saldo aktual" value={rupiah(s?.aktualBank ?? 0)} />
             <Baris label="Selisih" value={rupiah(s?.selisihBank ?? 0)} bold />
             <div className="pt-1">
               <StatusBadge selisih={s?.selisihBank ?? 0} />
