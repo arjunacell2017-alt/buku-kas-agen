@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getUserId } from "@/lib/db";
+import { getUserId, rekeningQuery, labelRekening } from "@/lib/db";
 import { hitungMutasi } from "@/lib/aturan";
 import {
   rupiah,
@@ -45,6 +45,8 @@ type Form = {
   cost_method: string;
   payment_method: string;
   description: string;
+  account_id: string;
+  cost_account_id: string;
 };
 
 const kosong = (): Form => ({
@@ -59,6 +61,8 @@ const kosong = (): Form => ({
   cost_method: "Tidak Ada",
   payment_method: "Tunai",
   description: "",
+  account_id: "",
+  cost_account_id: "",
 });
 
 function TransaksiPage() {
@@ -70,6 +74,17 @@ function TransaksiPage() {
   const [sampai, setSampai] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form>(kosong());
+  const rekQ = useQuery(rekeningQuery);
+  const rekAktif = (rekQ.data ?? []).filter((x) => x.status === "aktif");
+  const namaRek = (id: string | null) => {
+    const x = (rekQ.data ?? []).find((a) => a.id === id);
+    return x ? labelRekening(x) : "-";
+  };
+  const bukaBaru = () => {
+    const def = rekAktif.length === 1 ? rekAktif[0].id : "";
+    setForm({ ...kosong(), account_id: def, cost_account_id: def });
+    setOpen(true);
+  };
 
   const list = useQuery({
     queryKey: ["transaksi", halaman, cari, jenis, dari, sampai],
@@ -77,7 +92,7 @@ function TransaksiPage() {
       let q = supabase
         .from("transactions")
         .select(
-          "id,transaction_date,transaction_time,transaction_number,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,payment_method,description",
+          "id,transaction_date,transaction_time,transaction_number,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,payment_method,description,account_id,cost_account_id",
           { count: "exact" },
         )
         .order("transaction_date", { ascending: false })
@@ -110,7 +125,10 @@ function TransaksiPage() {
         cost_method: f.cost_method,
         payment_method: f.payment_method,
         description: f.description || null,
+        account_id: f.account_id || null,
+        cost_account_id: f.cost_method === "Saldo" ? f.cost_account_id || f.account_id || null : null,
       };
+      if (rekAktif.length > 0 && !f.account_id) throw new Error("Pilih rekening transaksi");
       if (f.id) {
         const { error } = await supabase.from("transactions").update(payload).eq("id", f.id);
         if (error) throw error;
@@ -154,10 +172,7 @@ function TransaksiPage() {
         subtitle="Kelola seluruh transaksi agen."
         action={
           <Button
-            onClick={() => {
-              setForm(kosong());
-              setOpen(true);
-            }}
+            onClick={bukaBaru}
           >
             <Plus /> Tambah Transaksi
           </Button>
@@ -222,6 +237,7 @@ function TransaksiPage() {
                   <th className="py-2">Tanggal</th>
                   <th className="py-2">Jam</th>
                   <th className="py-2">Jenis</th>
+                  <th className="py-2">Rekening</th>
                   <th className="py-2 text-right">Nominal</th>
                   <th className="py-2 text-right">Fee</th>
                   <th className="py-2">Fee via</th>
@@ -239,6 +255,7 @@ function TransaksiPage() {
                       <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
                       <td className="py-2">{jamID(r.transaction_time)}</td>
                        <td className="py-2 whitespace-nowrap"><span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-primary">{r.transaction_type}</span></td>
+                      <td className="py-2 whitespace-nowrap">{namaRek(r.account_id)}</td>
                       <td className="py-2 text-right tabular-nums">{rupiah(r.amount)}</td>
                       <td className="py-2 text-right tabular-nums">{rupiah(r.fee)}</td>
                       <td className="py-2">{r.fee_method}</td>
@@ -270,6 +287,8 @@ function TransaksiPage() {
                               cost_method: r.cost_method ?? "Tidak Ada",
                               payment_method: r.payment_method,
                               description: r.description ?? "",
+                              account_id: r.account_id ?? "",
+                              cost_account_id: r.cost_account_id ?? r.account_id ?? "",
                             });
                             setOpen(true);
                           }}
@@ -368,6 +387,19 @@ function TransaksiPage() {
               ))}
             </select>
           </Field>
+          <Field label="Rekening transaksi">
+            <select
+              required={rekAktif.length > 0}
+              className={inputClass}
+              value={form.account_id}
+              onChange={(e) => setForm({ ...form, account_id: e.target.value })}
+            >
+              <option value="">Pilih rekening</option>
+              {(rekQ.data ?? []).filter((x) => x.status === "aktif" || x.id === form.account_id).map((x) => (
+                <option key={x.id} value={x.id}>{labelRekening(x)}</option>
+              ))}
+            </select>
+          </Field>
            <div className="sm:col-span-2 mt-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">Nilai & Fee</div>
            <Field label="Nominal">
             <input
@@ -425,6 +457,18 @@ function TransaksiPage() {
               }
             />
           </Field>
+          {form.cost_method === "Saldo" ? (
+          <Field label="Rekening pembayaran biaya">
+            <select
+              className={inputClass}
+              value={form.cost_account_id || form.account_id}
+              onChange={(e) => setForm({ ...form, cost_account_id: e.target.value })}
+            >
+              {(rekQ.data ?? []).filter((x) => x.status === "aktif" || x.id === form.cost_account_id).map((x) => (
+                <option key={x.id} value={x.id}>{labelRekening(x)}</option>
+              ))}
+            </select>
+          </Field>) : null}
           <Field label="Metode pembayaran transaksi">
             <select
               className={inputClass}
@@ -483,7 +527,7 @@ function TransaksiPage() {
             </button>
           </div>
           {simpan.isError ? (
-            <p className="sm:col-span-2 text-xs text-destructive">Gagal menyimpan transaksi.</p>
+            <p className="sm:col-span-2 text-xs text-destructive">{simpan.error instanceof Error && simpan.error.message === "Pilih rekening transaksi" ? simpan.error.message : "Gagal menyimpan transaksi."}</p>
           ) : null}
         </form>
       </Modal>
