@@ -35,7 +35,8 @@ function KasPage() {
     queryFn: async () => {
       const { data, error, count } = await supabase
         .from("cash_transactions")
-        .select("id,transaction_date,type,category,amount,description", { count: "exact" }).eq("user_id", await getUserId())
+        .select("id,transaction_date,type,category,amount,description", { count: "exact" })
+        .eq("user_id", await getUserId())
         .order("transaction_date", { ascending: false })
         .order("created_at", { ascending: false })
         .range(halaman * PER_HAL, halaman * PER_HAL + PER_HAL - 1);
@@ -89,16 +90,30 @@ function KasPage() {
         subtitle="Posisi dan mutasi uang kas fisik."
         action={
           <div className="flex gap-2">
-            <Button onClick={() => buka("Kas Masuk")}><ArrowDownToLine /> Kas Masuk</Button>
-            <Button variant="outline" onClick={() => buka("Kas Keluar")}><ArrowUpFromLine /> Kas Keluar</Button>
+            <Button onClick={() => buka("Kas Masuk")}>
+              <ArrowDownToLine /> Kas Masuk
+            </Button>
+            <Button variant="outline" onClick={() => buka("Kas Keluar")}>
+              <ArrowUpFromLine /> Kas Keluar
+            </Button>
           </div>
         }
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label="Saldo Awal Kas" value={s?.settings.opening_cash_balance ?? 0} />
-        <Kpi label="Total Kas Masuk" value={s?.kasMasuk ?? 0} tone="positive" icon={<ArrowDownToLine />} />
-        <Kpi label="Total Kas Keluar" value={s?.kasKeluar ?? 0} tone="negative" icon={<ArrowUpFromLine />} />
+        <Kpi
+          label="Total Kas Masuk"
+          value={s?.kasMasuk ?? 0}
+          tone="positive"
+          icon={<ArrowDownToLine />}
+        />
+        <Kpi
+          label="Total Kas Keluar"
+          value={s?.kasKeluar ?? 0}
+          tone="negative"
+          icon={<ArrowUpFromLine />}
+        />
         <Kpi label="Saldo Kas" value={s?.saldoKas ?? 0} icon={<Wallet />} prominent />
       </div>
 
@@ -132,7 +147,10 @@ function KasPage() {
                     <td className="py-2 text-muted-foreground">{r.description ?? "-"}</td>
                     <td className="py-2 text-right">
                       <Button
-                        variant="ghost" size="icon" className="text-destructive" aria-label="Hapus catatan kas"
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        aria-label="Hapus catatan kas"
                         onClick={() => {
                           if (confirm("Hapus catatan kas ini?")) hapus.mutate(r.id);
                         }}

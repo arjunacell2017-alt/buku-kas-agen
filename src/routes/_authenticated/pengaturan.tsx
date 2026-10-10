@@ -1,7 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchSaldo, saveSettings, saveRekening, labelRekening, type Settings, type Rekening , getUserId } from "@/lib/db";
+import {
+  fetchSaldo,
+  saveSettings,
+  saveRekening,
+  labelRekening,
+  type Settings,
+  type Rekening,
+  getUserId,
+} from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { Modal, btnGhost } from "@/components/Modal";
 import { Button } from "@/components/ui/button";
@@ -33,18 +41,36 @@ function PengaturanPage() {
     onSuccess: () => qc.invalidateQueries(),
   });
 
-  type FormRek = { id?: string; bank_name: string; account_number: string; owner_name: string; opening_balance: string; start_date: string };
+  type FormRek = {
+    id?: string;
+    bank_name: string;
+    account_number: string;
+    owner_name: string;
+    opening_balance: string;
+    start_date: string;
+  };
   const [rekForm, setRekForm] = useState<FormRek | null>(null);
   const simpanRek = useMutation({
     mutationFn: async (f: FormRek) =>
       saveRekening({ ...f, opening_balance: Number(f.opening_balance || 0) }),
-    onSuccess: () => { setRekForm(null); qc.invalidateQueries(); },
+    onSuccess: () => {
+      setRekForm(null);
+      qc.invalidateQueries();
+    },
   });
   const hapusRek = useMutation({
     mutationFn: async (r: Rekening) => {
       const [a, b] = await Promise.all([
-        supabase.from("transactions").select("id", { count: "exact", head: true }).eq("user_id", await getUserId()).or(`account_id.eq.${r.id},cost_account_id.eq.${r.id}`),
-        supabase.from("bank_transactions").select("id", { count: "exact", head: true }).eq("user_id", await getUserId()).eq("account_id", r.id),
+        supabase
+          .from("transactions")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", await getUserId())
+          .or(`account_id.eq.${r.id},cost_account_id.eq.${r.id}`),
+        supabase
+          .from("bank_transactions")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", await getUserId())
+          .eq("account_id", r.id),
       ]);
       if ((a.count ?? 0) + (b.count ?? 0) > 0) {
         // Sudah punya mutasi: nonaktifkan agar saldo & riwayat tetap utuh
@@ -116,51 +142,161 @@ function PengaturanPage() {
 
       <Panel title="Saldo Awal Rekening">
         <div className="mb-3 flex justify-end">
-          <Button onClick={() => setRekForm({ bank_name: "", account_number: "", owner_name: "", opening_balance: "", start_date: todayISO() })}>
+          <Button
+            onClick={() =>
+              setRekForm({
+                bank_name: "",
+                account_number: "",
+                owner_name: "",
+                opening_balance: "",
+                start_date: todayISO(),
+              })
+            }
+          >
             <Plus /> Tambah Rekening
           </Button>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {rekList.map((r) => (
             <div key={r.id} className="rounded-lg border border-border p-4">
-              <p className="font-bold text-primary">{labelRekening(r)} {r.status !== "aktif" ? <span className="text-xs text-muted-foreground">(nonaktif)</span> : null}</p>
-              {r.owner_name ? <p className="text-xs text-muted-foreground">a.n. {r.owner_name}</p> : null}
-              <p className="mt-1 text-sm">Saldo Awal: <span className="font-semibold tabular-nums">{rupiah(r.opening_balance)}</span></p>
+              <p className="font-bold text-primary">
+                {labelRekening(r)}{" "}
+                {r.status !== "aktif" ? (
+                  <span className="text-xs text-muted-foreground">(nonaktif)</span>
+                ) : null}
+              </p>
+              {r.owner_name ? (
+                <p className="text-xs text-muted-foreground">a.n. {r.owner_name}</p>
+              ) : null}
+              <p className="mt-1 text-sm">
+                Saldo Awal:{" "}
+                <span className="font-semibold tabular-nums">{rupiah(r.opening_balance)}</span>
+              </p>
               <div className="mt-2 flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setRekForm({ id: r.id, bank_name: r.bank_name, account_number: r.account_number ?? "", owner_name: r.owner_name ?? "", opening_balance: String(r.opening_balance), start_date: r.start_date })}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setRekForm({
+                      id: r.id,
+                      bank_name: r.bank_name,
+                      account_number: r.account_number ?? "",
+                      owner_name: r.owner_name ?? "",
+                      opening_balance: String(r.opening_balance),
+                      start_date: r.start_date,
+                    })
+                  }
+                >
                   <Pencil /> Edit
                 </Button>
                 {r.status === "aktif" ? (
-                  <Button variant="outline" size="sm" className="text-destructive" onClick={() => {
-                    if (confirm("Hapus rekening ini? Jika sudah memiliki mutasi, rekening akan dinonaktifkan agar riwayat tetap utuh.")) hapusRek.mutate(r);
-                  }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive"
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "Hapus rekening ini? Jika sudah memiliki mutasi, rekening akan dinonaktifkan agar riwayat tetap utuh.",
+                        )
+                      )
+                        hapusRek.mutate(r);
+                    }}
+                  >
                     <Trash2 /> Hapus
                   </Button>
                 ) : (
-                  <Button variant="outline" size="sm" onClick={() => saveRekening({ ...r, status: "aktif" }).then(() => qc.invalidateQueries())}>Aktifkan</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      saveRekening({ ...r, status: "aktif" }).then(() => qc.invalidateQueries())
+                    }
+                  >
+                    Aktifkan
+                  </Button>
                 )}
               </div>
             </div>
           ))}
         </div>
         <div className="mt-3 rounded-lg border border-border bg-secondary/50 px-4 py-3 text-sm">
-          Total Saldo Awal Rekening: <span className="font-semibold tabular-nums">{rupiah(totalRek)}</span>
+          Total Saldo Awal Rekening:{" "}
+          <span className="font-semibold tabular-nums">{rupiah(totalRek)}</span>
         </div>
       </Panel>
 
-      <Modal open={!!rekForm} title={rekForm?.id ? "Edit Rekening" : "Tambah Rekening"} onClose={() => setRekForm(null)}>
+      <Modal
+        open={!!rekForm}
+        title={rekForm?.id ? "Edit Rekening" : "Tambah Rekening"}
+        onClose={() => setRekForm(null)}
+      >
         {rekForm ? (
-          <form className="grid gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); simpanRek.mutate(rekForm); }}>
-            <Field label="Nama bank"><input required maxLength={60} className={inputClass} value={rekForm.bank_name} onChange={(e) => setRekForm({ ...rekForm, bank_name: e.target.value })} /></Field>
-            <Field label="Nomor rekening (opsional)"><input inputMode="numeric" maxLength={30} className={inputClass} value={rekForm.account_number} onChange={(e) => setRekForm({ ...rekForm, account_number: e.target.value.replace(/[^0-9]/g, "") })} /></Field>
-            <Field label="Nama pemilik (opsional)"><input maxLength={80} className={inputClass} value={rekForm.owner_name} onChange={(e) => setRekForm({ ...rekForm, owner_name: e.target.value })} /></Field>
-            <Field label="Saldo awal"><input inputMode="numeric" className={inputClass} value={rekForm.opening_balance} onChange={(e) => setRekForm({ ...rekForm, opening_balance: e.target.value.replace(/[^0-9]/g, "") })} /></Field>
-            <Field label="Tanggal mulai"><input type="date" required className={inputClass} value={rekForm.start_date} onChange={(e) => setRekForm({ ...rekForm, start_date: e.target.value })} /></Field>
+          <form
+            className="grid gap-3 sm:grid-cols-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              simpanRek.mutate(rekForm);
+            }}
+          >
+            <Field label="Nama bank">
+              <input
+                required
+                maxLength={60}
+                className={inputClass}
+                value={rekForm.bank_name}
+                onChange={(e) => setRekForm({ ...rekForm, bank_name: e.target.value })}
+              />
+            </Field>
+            <Field label="Nomor rekening (opsional)">
+              <input
+                inputMode="numeric"
+                maxLength={30}
+                className={inputClass}
+                value={rekForm.account_number}
+                onChange={(e) =>
+                  setRekForm({ ...rekForm, account_number: e.target.value.replace(/[^0-9]/g, "") })
+                }
+              />
+            </Field>
+            <Field label="Nama pemilik (opsional)">
+              <input
+                maxLength={80}
+                className={inputClass}
+                value={rekForm.owner_name}
+                onChange={(e) => setRekForm({ ...rekForm, owner_name: e.target.value })}
+              />
+            </Field>
+            <Field label="Saldo awal">
+              <input
+                inputMode="numeric"
+                className={inputClass}
+                value={rekForm.opening_balance}
+                onChange={(e) =>
+                  setRekForm({ ...rekForm, opening_balance: e.target.value.replace(/[^0-9]/g, "") })
+                }
+              />
+            </Field>
+            <Field label="Tanggal mulai">
+              <input
+                type="date"
+                required
+                className={inputClass}
+                value={rekForm.start_date}
+                onChange={(e) => setRekForm({ ...rekForm, start_date: e.target.value })}
+              />
+            </Field>
             <div className="sm:col-span-2 flex justify-end gap-2">
-              <button type="button" className={btnGhost} onClick={() => setRekForm(null)}>Batal</button>
-              <button type="submit" className={btnPrimary} disabled={simpanRek.isPending}>Simpan</button>
+              <button type="button" className={btnGhost} onClick={() => setRekForm(null)}>
+                Batal
+              </button>
+              <button type="submit" className={btnPrimary} disabled={simpanRek.isPending}>
+                Simpan
+              </button>
             </div>
-            {simpanRek.isError ? <p className="sm:col-span-2 text-xs text-destructive">Gagal menyimpan rekening.</p> : null}
+            {simpanRek.isError ? (
+              <p className="sm:col-span-2 text-xs text-destructive">Gagal menyimpan rekening.</p>
+            ) : null}
           </form>
         ) : null}
       </Modal>
@@ -191,7 +327,8 @@ function PengaturanPage() {
           </div>
           <div className="rounded-md border border-border px-3 py-2 text-sm">
             <p className="text-xs text-muted-foreground">
-              Total rekening pembukuan {rupiah(s?.saldoBank ?? 0)} — selisih {rupiah(s?.selisihBank ?? 0)}
+              Total rekening pembukuan {rupiah(s?.saldoBank ?? 0)} — selisih{" "}
+              {rupiah(s?.selisihBank ?? 0)}
             </p>
             <div className="pt-1">
               <StatusBadge selisih={s?.selisihBank ?? 0} />

@@ -32,7 +32,8 @@ function BiayaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("expenses")
-        .select("category,amount").eq("user_id", await getUserId())
+        .select("category,amount")
+        .eq("user_id", await getUserId())
         .gte("expense_date", bulan.from)
         .lte("expense_date", bulan.to);
       if (error) throw error;
@@ -45,7 +46,8 @@ function BiayaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("expenses")
-        .select("id,expense_date,category,amount,description").eq("user_id", await getUserId())
+        .select("id,expense_date,category,amount,description")
+        .eq("user_id", await getUserId())
         .order("expense_date", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(20);
@@ -97,12 +99,20 @@ function BiayaPage() {
         title="Biaya Operasional"
         subtitle="Pantau pengeluaran operasional agen."
         action={
-          <Button onClick={() => setOpen(true)}><Plus /> Tambah Biaya</Button>
+          <Button onClick={() => setOpen(true)}>
+            <Plus /> Tambah Biaya
+          </Button>
         }
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi label="Total Biaya Bulan Ini" value={totalBulan} tone="negative" icon={<ReceiptText />} prominent />
+        <Kpi
+          label="Total Biaya Bulan Ini"
+          value={totalBulan}
+          tone="negative"
+          icon={<ReceiptText />}
+          prominent
+        />
         <Kpi label="Jumlah Catatan" value={String((bulanIni.data ?? []).length)} />
       </div>
 
@@ -113,7 +123,10 @@ function BiayaPage() {
           <table className="w-full text-sm">
             <tbody>
               {perKategori.map((r) => (
-                <tr key={r.kategori} className="border-t border-border/70 first:border-t-0 hover:bg-secondary/40">
+                <tr
+                  key={r.kategori}
+                  className="border-t border-border/70 first:border-t-0 hover:bg-secondary/40"
+                >
                   <td className="py-2">{r.kategori}</td>
                   <td className="py-2 text-right tabular-nums">{rupiah(r.total)}</td>
                 </tr>
@@ -147,7 +160,10 @@ function BiayaPage() {
                     <td className="py-2 text-muted-foreground">{r.description ?? "-"}</td>
                     <td className="py-2 text-right">
                       <Button
-                        variant="ghost" size="icon" className="text-destructive" aria-label="Hapus biaya"
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        aria-label="Hapus biaya"
                         onClick={() => {
                           if (confirm("Hapus biaya ini?")) hapus.mutate(r.id);
                         }}

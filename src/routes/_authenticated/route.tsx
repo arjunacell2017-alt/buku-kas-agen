@@ -14,7 +14,12 @@ export const Route = createFileRoute("/_authenticated")({
       throw redirect({
         to: "/auth",
         search: {
-          alasan: akses.status === "SUSPENDED" ? "suspended" : akses.status === "EXPIRED" ? "expired" : "noaccess",
+          alasan:
+            akses.status === "SUSPENDED"
+              ? "suspended"
+              : akses.status === "EXPIRED"
+                ? "expired"
+                : "noaccess",
           sampai: akses.activeUntil ?? undefined,
         },
       });
