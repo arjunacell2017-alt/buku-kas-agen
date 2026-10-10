@@ -46,6 +46,7 @@ export async function fetchSettings(): Promise<Settings> {
     .select(
       "id,business_name,start_date,opening_cash_balance,opening_bank_balance,actual_cash_balance,actual_bank_balance",
     )
+    .eq("user_id", await getUserId())
     .maybeSingle();
   if (error) throw error;
   if (!data) return DEFAULT_SETTINGS;
@@ -71,7 +72,10 @@ export async function saveSettings(s: Settings) {
 export async function fetchRekening(): Promise<Rekening[]> {
   const { data, error } = await supabase
     .from("bank_accounts")
-    .select("id,bank_name,account_number,owner_name,opening_balance,start_date,actual_balance,status")
+    .select(
+      "id,bank_name,account_number,owner_name,opening_balance,start_date,actual_balance,status",
+    )
+    .eq("user_id", await getUserId())
     .order("created_at");
   if (error) throw error;
   return (data ?? []).map((r) => ({
@@ -123,9 +127,16 @@ export async function fetchSaldo() {
       .from("transactions")
       .select(
         "transaction_type,amount,fee,fee_method,transaction_cost,cost_method,account_id,cost_account_id",
-      ),
-    supabase.from("cash_transactions").select("type,amount"),
-    supabase.from("bank_transactions").select("debit,credit,account_id"),
+      )
+      .eq("user_id", await getUserId()),
+    supabase
+      .from("cash_transactions")
+      .select("type,amount")
+      .eq("user_id", await getUserId()),
+    supabase
+      .from("bank_transactions")
+      .select("debit,credit,account_id")
+      .eq("user_id", await getUserId()),
   ]);
   if (tx.error) throw tx.error;
   if (kas.error) throw kas.error;
@@ -134,7 +145,7 @@ export async function fetchSaldo() {
   const fallbackId = rekening.find((r) => r.status === "aktif")?.id ?? rekening[0]?.id ?? "";
   const perRek = new Map<string, { kredit: number; debit: number }>();
   const catatRek = (id: string | null, m: number) => {
-    const key = id && perRek.has(id) ? id : id ?? fallbackId;
+    const key = id && perRek.has(id) ? id : (id ?? fallbackId);
     const p = perRek.get(key) ?? { kredit: 0, debit: 0 };
     if (m > 0) p.kredit += m;
     else if (m < 0) p.debit += -m;
@@ -229,12 +240,18 @@ export async function fetchRingkasan(from: string, to: string, accountId?: strin
   let txq = supabase
     .from("transactions")
     .select("transaction_type,amount,fee,fee_method,transaction_cost,cost_method")
+    .eq("user_id", await getUserId())
     .gte("transaction_date", from)
     .lte("transaction_date", to);
   if (accountId) txq = txq.eq("account_id", accountId);
   const [tx, exp] = await Promise.all([
     txq,
-    supabase.from("expenses").select("amount").gte("expense_date", from).lte("expense_date", to),
+    supabase
+      .from("expenses")
+      .select("amount")
+      .eq("user_id", await getUserId())
+      .gte("expense_date", from)
+      .lte("expense_date", to),
   ]);
   if (tx.error) throw tx.error;
   if (exp.error) throw exp.error;

@@ -13,15 +13,10 @@ import {
   nowTime,
   parseNominal,
 } from "@/lib/format";
-import {
-  JENIS_TRANSAKSI,
-  METODE_PEMBAYARAN,
-  METODE_FEE,
-  METODE_BIAYA,
-} from "@/lib/konstanta";
+import { JENIS_TRANSAKSI, METODE_PEMBAYARAN, METODE_FEE, METODE_BIAYA } from "@/lib/konstanta";
 import { PageHeader, Panel, Empty } from "@/components/ui-kit";
 import { Modal, Field, inputClass, btnPrimary, btnGhost } from "@/components/Modal";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pageMeta } from "@/lib/meta";
 
@@ -95,6 +90,7 @@ function TransaksiPage() {
           "id,transaction_date,transaction_time,transaction_number,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,payment_method,description,account_id,cost_account_id",
           { count: "exact" },
         )
+        .eq("user_id", await getUserId())
         .order("transaction_date", { ascending: false })
         .order("transaction_time", { ascending: false })
         .range(halaman * PER_HAL, halaman * PER_HAL + PER_HAL - 1);
@@ -112,7 +108,15 @@ function TransaksiPage() {
   const simpan = useMutation({
     mutationFn: async (f: Form) => {
       const feeMasuk = f.transaction_type === "Fee Masuk";
-      if (feeMasuk) f = { ...f, fee: "0", fee_method: "Saldo", transaction_cost: "0", cost_method: "Tidak Ada", payment_method: "Rekening" };
+      if (feeMasuk)
+        f = {
+          ...f,
+          fee: "0",
+          fee_method: "Saldo",
+          transaction_cost: "0",
+          cost_method: "Tidak Ada",
+          payment_method: "Rekening",
+        };
       const payload = {
         transaction_date: f.transaction_date,
         transaction_time: f.transaction_time || "00:00",
@@ -126,7 +130,8 @@ function TransaksiPage() {
         payment_method: f.payment_method,
         description: f.description || null,
         account_id: f.account_id || null,
-        cost_account_id: f.cost_method === "Saldo" ? f.cost_account_id || f.account_id || null : null,
+        cost_account_id:
+          f.cost_method === "Saldo" ? f.cost_account_id || f.account_id || null : null,
       };
       if (rekAktif.length > 0 && !f.account_id) throw new Error("Pilih rekening transaksi");
       if (f.id) {
@@ -146,10 +151,18 @@ function TransaksiPage() {
 
   const hapus = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      const { data, error } = await supabase
+        .from("transactions")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", await getUserId())
+        .select("id");
       if (error) throw error;
+      if (!data || data.length === 0)
+        throw new Error("Transaksi tidak ditemukan atau Anda tidak berhak menghapusnya.");
     },
     onSuccess: () => qc.invalidateQueries(),
+    onError: (e) => alert(`Transaksi belum berhasil dihapus. ${(e as Error).message}`),
   });
 
   const total = list.data?.count ?? 0;
@@ -171,9 +184,7 @@ function TransaksiPage() {
         title="Transaksi"
         subtitle="Kelola seluruh transaksi agen."
         action={
-          <Button
-            onClick={bukaBaru}
-          >
+          <Button onClick={bukaBaru}>
             <Plus /> Tambah Transaksi
           </Button>
         }
@@ -181,15 +192,18 @@ function TransaksiPage() {
 
       <Panel>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="relative"><Search className="absolute left-3 top-3 size-4 text-muted-foreground" /><input
-            placeholder="Cari keterangan / no. transaksi"
-            value={cari}
-            onChange={(e) => {
-              setHalaman(0);
-              setCari(e.target.value);
-            }}
-            className={`${inputClass} pl-9`}
-          /></div>
+          <div className="relative">
+            <Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
+            <input
+              placeholder="Cari keterangan / no. transaksi"
+              value={cari}
+              onChange={(e) => {
+                setHalaman(0);
+                setCari(e.target.value);
+              }}
+              className={`${inputClass} pl-9`}
+            />
+          </div>
           <select
             value={jenis}
             onChange={(e) => {
@@ -254,7 +268,11 @@ function TransaksiPage() {
                     <tr key={r.id} className="border-t border-border/70 hover:bg-secondary/40">
                       <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
                       <td className="py-2">{jamID(r.transaction_time)}</td>
-                       <td className="py-2 whitespace-nowrap"><span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-primary">{r.transaction_type}</span></td>
+                      <td className="py-2 whitespace-nowrap">
+                        <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-primary">
+                          {r.transaction_type}
+                        </span>
+                      </td>
                       <td className="py-2 whitespace-nowrap">{namaRek(r.account_id)}</td>
                       <td className="py-2 text-right tabular-nums">{rupiah(r.amount)}</td>
                       <td className="py-2 text-right tabular-nums">{rupiah(r.fee)}</td>
@@ -271,8 +289,10 @@ function TransaksiPage() {
                       </td>
                       <td className="py-2 text-muted-foreground">{r.description ?? "-"}</td>
                       <td className="py-2 text-right whitespace-nowrap">
-                         <Button
-                           variant="ghost" size="icon" aria-label="Edit transaksi"
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Edit transaksi"
                           onClick={() => {
                             setForm({
                               id: r.id,
@@ -293,11 +313,16 @@ function TransaksiPage() {
                             setOpen(true);
                           }}
                         >
-                           <Pencil />
-                         </Button>
-                         <Button
-                           variant="ghost" size="icon" className="text-destructive" aria-label="Hapus transaksi"
+                          <Pencil />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          aria-label="Hapus transaksi"
+                          disabled={hapus.isPending}
                           onClick={() => {
+                            if (hapus.isPending) return;
                             if (
                               confirm(
                                 "Hapus transaksi ini? Seluruh mutasi kas, rekening, fee, dan biaya ikut dibatalkan.",
@@ -306,8 +331,12 @@ function TransaksiPage() {
                               hapus.mutate(r.id);
                           }}
                         >
-                           <Trash2 />
-                         </Button>
+                          {hapus.isPending && hapus.variables === r.id ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            <Trash2 />
+                          )}
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -343,14 +372,16 @@ function TransaksiPage() {
         onClose={() => setOpen(false)}
       >
         <form
-           className="grid gap-4 sm:grid-cols-2"
+          className="grid gap-4 sm:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
             simpan.mutate(form);
           }}
         >
-           <div className="sm:col-span-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">Informasi Transaksi</div>
-           <Field label="Tanggal">
+          <div className="sm:col-span-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">
+            Informasi Transaksi
+          </div>
+          <Field label="Tanggal">
             <input
               type="date"
               required
@@ -395,13 +426,19 @@ function TransaksiPage() {
               onChange={(e) => setForm({ ...form, account_id: e.target.value })}
             >
               <option value="">Pilih rekening</option>
-              {(rekQ.data ?? []).filter((x) => x.status === "aktif" || x.id === form.account_id).map((x) => (
-                <option key={x.id} value={x.id}>{labelRekening(x)}</option>
-              ))}
+              {(rekQ.data ?? [])
+                .filter((x) => x.status === "aktif" || x.id === form.account_id)
+                .map((x) => (
+                  <option key={x.id} value={x.id}>
+                    {labelRekening(x)}
+                  </option>
+                ))}
             </select>
           </Field>
-           <div className="sm:col-span-2 mt-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">Nilai & Fee</div>
-           <Field label="Nominal">
+          <div className="sm:col-span-2 mt-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">
+            Nilai & Fee
+          </div>
+          <Field label="Nominal">
             <input
               inputMode="numeric"
               required
@@ -410,79 +447,88 @@ function TransaksiPage() {
               onChange={(e) => setForm({ ...form, amount: e.target.value.replace(/[^0-9]/g, "") })}
             />
           </Field>
-          {form.transaction_type !== "Fee Masuk" ? (<>
-          <Field label="Fee (pendapatan agen)">
-            <input
-              inputMode="numeric"
-              className={inputClass}
-              value={form.fee}
-              onChange={(e) => setForm({ ...form, fee: e.target.value.replace(/[^0-9]/g, "") })}
-            />
-          </Field>
-          <Field label="Metode pembayaran fee">
-            <select
-              className={inputClass}
-              value={form.fee_method}
-              onChange={(e) => setForm({ ...form, fee_method: e.target.value })}
-            >
-              {METODE_FEE.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </Field>
-           <div className="sm:col-span-2 mt-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">Biaya & Metode</div>
-           <Field label="Metode pembayaran biaya">
-            <select
-              className={inputClass}
-              value={form.cost_method}
-              onChange={(e) => setForm({ ...form, cost_method: e.target.value })}
-            >
-              {METODE_BIAYA.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Biaya transaksi">
-            <input
-              inputMode="numeric"
-              disabled={form.cost_method === "Tidak Ada"}
-              className={`${inputClass} disabled:opacity-50`}
-              value={form.cost_method === "Tidak Ada" ? "" : form.transaction_cost}
-              onChange={(e) =>
-                setForm({ ...form, transaction_cost: e.target.value.replace(/[^0-9]/g, "") })
-              }
-            />
-          </Field>
-          {form.cost_method === "Saldo" ? (
-          <Field label="Rekening pembayaran biaya">
-            <select
-              className={inputClass}
-              value={form.cost_account_id || form.account_id}
-              onChange={(e) => setForm({ ...form, cost_account_id: e.target.value })}
-            >
-              {(rekQ.data ?? []).filter((x) => x.status === "aktif" || x.id === form.cost_account_id).map((x) => (
-                <option key={x.id} value={x.id}>{labelRekening(x)}</option>
-              ))}
-            </select>
-          </Field>) : null}
-          <Field label="Metode pembayaran transaksi">
-            <select
-              className={inputClass}
-              value={form.payment_method}
-              onChange={(e) => setForm({ ...form, payment_method: e.target.value })}
-            >
-              {METODE_PEMBAYARAN.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </Field>
-          </>) : null}
+          {form.transaction_type !== "Fee Masuk" ? (
+            <>
+              <Field label="Fee (pendapatan agen)">
+                <input
+                  inputMode="numeric"
+                  className={inputClass}
+                  value={form.fee}
+                  onChange={(e) => setForm({ ...form, fee: e.target.value.replace(/[^0-9]/g, "") })}
+                />
+              </Field>
+              <Field label="Metode pembayaran fee">
+                <select
+                  className={inputClass}
+                  value={form.fee_method}
+                  onChange={(e) => setForm({ ...form, fee_method: e.target.value })}
+                >
+                  {METODE_FEE.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <div className="sm:col-span-2 mt-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">
+                Biaya & Metode
+              </div>
+              <Field label="Metode pembayaran biaya">
+                <select
+                  className={inputClass}
+                  value={form.cost_method}
+                  onChange={(e) => setForm({ ...form, cost_method: e.target.value })}
+                >
+                  {METODE_BIAYA.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Biaya transaksi">
+                <input
+                  inputMode="numeric"
+                  disabled={form.cost_method === "Tidak Ada"}
+                  className={`${inputClass} disabled:opacity-50`}
+                  value={form.cost_method === "Tidak Ada" ? "" : form.transaction_cost}
+                  onChange={(e) =>
+                    setForm({ ...form, transaction_cost: e.target.value.replace(/[^0-9]/g, "") })
+                  }
+                />
+              </Field>
+              {form.cost_method === "Saldo" ? (
+                <Field label="Rekening pembayaran biaya">
+                  <select
+                    className={inputClass}
+                    value={form.cost_account_id || form.account_id}
+                    onChange={(e) => setForm({ ...form, cost_account_id: e.target.value })}
+                  >
+                    {(rekQ.data ?? [])
+                      .filter((x) => x.status === "aktif" || x.id === form.cost_account_id)
+                      .map((x) => (
+                        <option key={x.id} value={x.id}>
+                          {labelRekening(x)}
+                        </option>
+                      ))}
+                  </select>
+                </Field>
+              ) : null}
+              <Field label="Metode pembayaran transaksi">
+                <select
+                  className={inputClass}
+                  value={form.payment_method}
+                  onChange={(e) => setForm({ ...form, payment_method: e.target.value })}
+                >
+                  {METODE_PEMBAYARAN.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </>
+          ) : null}
           <div className="sm:col-span-2">
             <Field label="Keterangan">
               <input
@@ -494,7 +540,7 @@ function TransaksiPage() {
             </Field>
           </div>
 
-           <div className="sm:col-span-2 rounded-lg border border-border bg-secondary/50 p-4 text-xs">
+          <div className="sm:col-span-2 rounded-lg border border-border bg-secondary/50 p-4 text-xs">
             <p className="mb-1 font-medium">Dampak otomatis transaksi ini</p>
             <div className="grid grid-cols-3 gap-2 tabular-nums">
               <div>
@@ -527,7 +573,11 @@ function TransaksiPage() {
             </button>
           </div>
           {simpan.isError ? (
-            <p className="sm:col-span-2 text-xs text-destructive">{simpan.error instanceof Error && simpan.error.message === "Pilih rekening transaksi" ? simpan.error.message : "Gagal menyimpan transaksi."}</p>
+            <p className="sm:col-span-2 text-xs text-destructive">
+              {simpan.error instanceof Error && simpan.error.message === "Pilih rekening transaksi"
+                ? simpan.error.message
+                : "Gagal menyimpan transaksi."}
+            </p>
           ) : null}
         </form>
       </Modal>

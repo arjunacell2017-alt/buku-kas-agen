@@ -2,14 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchSaldo, fetchRingkasan, labelRekening } from "@/lib/db";
+import { fetchSaldo, fetchRingkasan, labelRekening, getUserId } from "@/lib/db";
 import { rupiah, rangeFromPeriode, type Periode } from "@/lib/format";
 import { PageHeader, Panel, StatusBadge } from "@/components/ui-kit";
 import { FilterPeriode } from "@/components/FilterPeriode";
 import { pageMeta } from "@/lib/meta";
 
 export const Route = createFileRoute("/_authenticated/laporan")({
-  head: () => pageMeta("Laporan Keuangan", "Ringkasan transaksi, laba rugi, arus kas, dan rekonsiliasi."),
+  head: () =>
+    pageMeta("Laporan Keuangan", "Ringkasan transaksi, laba rugi, arus kas, dan rekonsiliasi."),
   component: LaporanPage,
 });
 
@@ -44,6 +45,7 @@ function LaporanPage() {
       const { data, error } = await supabase
         .from("cash_transactions")
         .select("type,amount,transaction_date")
+        .eq("user_id", await getUserId())
         .lte("transaction_date", to);
       if (error) throw error;
       return data ?? [];
@@ -67,7 +69,10 @@ function LaporanPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Laporan Keuangan" subtitle="Ringkasan pembukuan untuk periode yang dipilih." />
+      <PageHeader
+        title="Laporan Keuangan"
+        subtitle="Ringkasan pembukuan untuk periode yang dipilih."
+      />
 
       <FilterPeriode
         periode={periode}
@@ -80,13 +85,25 @@ function LaporanPage() {
         }}
       />
 
-      <select className="h-10 rounded-md border border-input bg-card px-3 text-sm" value={akun} onChange={(e) => setAkun(e.target.value)} aria-label="Filter rekening">
+      <select
+        className="h-10 rounded-md border border-input bg-card px-3 text-sm"
+        value={akun}
+        onChange={(e) => setAkun(e.target.value)}
+        aria-label="Filter rekening"
+      >
         <option value="">Semua Rekening</option>
         {(saldo.data?.perRekening ?? []).map((x) => (
-          <option key={x.id} value={x.id}>{labelRekening(x)}</option>
+          <option key={x.id} value={x.id}>
+            {labelRekening(x)}
+          </option>
         ))}
       </select>
-      {akun ? <p className="text-xs text-muted-foreground">Laporan A–C hanya transaksi rekening terpilih; biaya operasional tidak terikat rekening sehingga tidak dihitung.</p> : null}
+      {akun ? (
+        <p className="text-xs text-muted-foreground">
+          Laporan A–C hanya transaksi rekening terpilih; biaya operasional tidak terikat rekening
+          sehingga tidak dihitung.
+        </p>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="A. Laporan Transaksi">
@@ -129,9 +146,15 @@ function LaporanPage() {
           </div>
           <div>
             <p className="mb-1 text-xs font-medium text-muted-foreground">REKENING</p>
-            {(s?.perRekening ?? []).filter((x) => !akun || x.id === akun).map((x) => (
-              <Baris key={x.id} label={`${labelRekening(x)}: ${rupiah(x.saldo)} vs ${rupiah(x.actual_balance)}`} value={rupiah(x.selisih)} />
-            ))}
+            {(s?.perRekening ?? [])
+              .filter((x) => !akun || x.id === akun)
+              .map((x) => (
+                <Baris
+                  key={x.id}
+                  label={`${labelRekening(x)}: ${rupiah(x.saldo)} vs ${rupiah(x.actual_balance)}`}
+                  value={rupiah(x.selisih)}
+                />
+              ))}
             <Baris label="Rekening pembukuan" value={rupiah(s?.saldoBank ?? 0)} />
             <Baris label="Saldo aktual" value={rupiah(s?.aktualBank ?? 0)} />
             <Baris label="Selisih" value={rupiah(s?.selisihBank ?? 0)} bold />

@@ -1,3 +1,4 @@
+import { getUserId } from "@/lib/db";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -26,6 +27,7 @@ function MutasiPage() {
           "transaction_id,transaction_date,transaction_time,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,mutasi_rekening,mutasi_kas,saldo_rekening,saldo_kas,description",
           { count: "exact" },
         )
+        .eq("user_id", await getUserId())
         .order("transaction_date", { ascending: false })
         .order("transaction_time", { ascending: false })
         .range(halaman * PER_HAL, halaman * PER_HAL + PER_HAL - 1);
@@ -63,10 +65,17 @@ function MutasiPage() {
               </thead>
               <tbody>
                 {(list.data?.rows ?? []).map((r) => (
-                  <tr key={r.transaction_id} className="border-t border-border/70 hover:bg-secondary/40">
+                  <tr
+                    key={r.transaction_id}
+                    className="border-t border-border/70 hover:bg-secondary/40"
+                  >
                     <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
                     <td className="py-2">{jamID(r.transaction_time)}</td>
-                    <td className="py-2 whitespace-nowrap"><span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-primary">{r.transaction_type}</span></td>
+                    <td className="py-2 whitespace-nowrap">
+                      <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-primary">
+                        {r.transaction_type}
+                      </span>
+                    </td>
                     <td className="py-2 text-right tabular-nums">{rupiah(r.amount)}</td>
                     <td className="py-2 text-right tabular-nums">{rupiah(r.fee)}</td>
                     <td className="py-2">{r.fee_method}</td>
