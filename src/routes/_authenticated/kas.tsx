@@ -35,7 +35,7 @@ function KasPage() {
     queryFn: async () => {
       const { data, error, count } = await supabase
         .from("cash_transactions")
-        .select("id,transaction_date,type,category,amount,description", { count: "exact" })
+        .select("id,transaction_date,type,category,amount,description", { count: "exact" }).eq("user_id", await getUserId())
         .order("transaction_date", { ascending: false })
         .order("created_at", { ascending: false })
         .range(halaman * PER_HAL, halaman * PER_HAL + PER_HAL - 1);

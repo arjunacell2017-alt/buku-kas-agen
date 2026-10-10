@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchSaldo, fetchRingkasan, labelRekening } from "@/lib/db";
+import { fetchSaldo, fetchRingkasan, labelRekening , getUserId } from "@/lib/db";
 import { rupiah, rangeFromPeriode, type Periode } from "@/lib/format";
 import { PageHeader, Panel, StatusBadge } from "@/components/ui-kit";
 import { FilterPeriode } from "@/components/FilterPeriode";
@@ -43,7 +43,7 @@ function LaporanPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cash_transactions")
-        .select("type,amount,transaction_date")
+        .select("type,amount,transaction_date").eq("user_id", await getUserId())
         .lte("transaction_date", to);
       if (error) throw error;
       return data ?? [];

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Landmark, Plus, Receipt, TrendingUp, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchSaldo, fetchRingkasan } from "@/lib/db";
+import { fetchSaldo, fetchRingkasan , getUserId } from "@/lib/db";
 import { rupiah, rupiahMutasi, tanggalID, jamID, rangeFromPeriode, type Periode } from "@/lib/format";
 import { hitungMutasi } from "@/lib/aturan";
 import { Kpi, Panel, PageHeader, StatusBadge, Empty, SectionHeading, tableCellClass, tableHeadClass, tableRowClass } from "@/components/ui-kit";
@@ -46,7 +46,7 @@ function Dashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("transactions")
-        .select("id,transaction_date,transaction_time,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,description")
+        .select("id,transaction_date,transaction_time,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,description").eq("user_id", await getUserId())
         .order("transaction_date", { ascending: false })
         .order("transaction_time", { ascending: false })
         .limit(10);

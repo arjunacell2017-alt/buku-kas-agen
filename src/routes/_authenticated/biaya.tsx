@@ -32,7 +32,7 @@ function BiayaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("expenses")
-        .select("category,amount")
+        .select("category,amount").eq("user_id", await getUserId())
         .gte("expense_date", bulan.from)
         .lte("expense_date", bulan.to);
       if (error) throw error;
@@ -45,7 +45,7 @@ function BiayaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("expenses")
-        .select("id,expense_date,category,amount,description")
+        .select("id,expense_date,category,amount,description").eq("user_id", await getUserId())
         .order("expense_date", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(20);

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchSaldo, saveSettings, saveRekening, labelRekening, type Settings, type Rekening } from "@/lib/db";
+import { fetchSaldo, saveSettings, saveRekening, labelRekening, type Settings, type Rekening , getUserId } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { Modal, btnGhost } from "@/components/Modal";
 import { Button } from "@/components/ui/button";
@@ -43,8 +43,8 @@ function PengaturanPage() {
   const hapusRek = useMutation({
     mutationFn: async (r: Rekening) => {
       const [a, b] = await Promise.all([
-        supabase.from("transactions").select("id", { count: "exact", head: true }).or(`account_id.eq.${r.id},cost_account_id.eq.${r.id}`),
-        supabase.from("bank_transactions").select("id", { count: "exact", head: true }).eq("account_id", r.id),
+        supabase.from("transactions").select("id", { count: "exact", head: true }).eq("user_id", await getUserId()).or(`account_id.eq.${r.id},cost_account_id.eq.${r.id}`),
+        supabase.from("bank_transactions").select("id", { count: "exact", head: true }).eq("user_id", await getUserId()).eq("account_id", r.id),
       ]);
       if ((a.count ?? 0) + (b.count ?? 0) > 0) {
         // Sudah punya mutasi: nonaktifkan agar saldo & riwayat tetap utuh

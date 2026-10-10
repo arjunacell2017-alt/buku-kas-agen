@@ -57,10 +57,10 @@ function RekeningPage() {
           .from("transactions")
           .select(
             "id,transaction_date,transaction_time,created_at,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,account_id,cost_account_id,description",
-          ),
+          ).eq("user_id", await getUserId()),
         supabase
           .from("bank_transactions")
-          .select("id,transaction_date,created_at,transaction_type,debit,credit,account_id,description"),
+          .select("id,transaction_date,created_at,transaction_type,debit,credit,account_id,description").eq("user_id", await getUserId()),
       ]);
       if (tx.error) throw tx.error;
       if (bank.error) throw bank.error;

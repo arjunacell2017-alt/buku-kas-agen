@@ -94,7 +94,7 @@ function TransaksiPage() {
         .select(
           "id,transaction_date,transaction_time,transaction_number,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,payment_method,description,account_id,cost_account_id",
           { count: "exact" },
-        )
+        ).eq("user_id", await getUserId())
         .order("transaction_date", { ascending: false })
         .order("transaction_time", { ascending: false })
         .range(halaman * PER_HAL, halaman * PER_HAL + PER_HAL - 1);

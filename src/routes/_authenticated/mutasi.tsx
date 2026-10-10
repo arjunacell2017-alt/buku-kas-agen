@@ -1,3 +1,4 @@
+import { getUserId } from "@/lib/db";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -25,7 +26,7 @@ function MutasiPage() {
         .select(
           "transaction_id,transaction_date,transaction_time,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,mutasi_rekening,mutasi_kas,saldo_rekening,saldo_kas,description",
           { count: "exact" },
-        )
+        ).eq("user_id", await getUserId())
         .order("transaction_date", { ascending: false })
         .order("transaction_time", { ascending: false })
         .range(halaman * PER_HAL, halaman * PER_HAL + PER_HAL - 1);
