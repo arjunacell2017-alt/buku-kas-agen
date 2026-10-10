@@ -83,6 +83,17 @@ function PengaturanPage() {
     onSuccess: () => qc.invalidateQueries(),
   });
 
+  if (saldo.isError && !form)
+    return (
+      <div className="space-y-3 rounded-lg border border-destructive/40 p-4">
+        <p className="text-sm text-destructive">
+          Pengaturan gagal dimuat: {(saldo.error as Error)?.message ?? "terjadi kesalahan"}
+        </p>
+        <Button variant="outline" onClick={() => saldo.refetch()} disabled={saldo.isFetching}>
+          {saldo.isFetching ? "Memuat ulang..." : "Coba lagi"}
+        </Button>
+      </div>
+    );
   if (!form) return <p className="text-sm text-muted-foreground">Memuat...</p>;
 
   const num = (v: string) => Number(v.replace(/[^0-9]/g, "") || 0);

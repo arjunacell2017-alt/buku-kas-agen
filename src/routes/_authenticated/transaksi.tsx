@@ -151,10 +151,18 @@ function TransaksiPage() {
 
   const hapus = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      const { data, error } = await supabase
+        .from("transactions")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", await getUserId())
+        .select("id");
       if (error) throw error;
+      if (!data || data.length === 0)
+        throw new Error("Transaksi tidak ditemukan atau Anda tidak berhak menghapusnya.");
     },
     onSuccess: () => qc.invalidateQueries(),
+    onError: (e) => alert(`Transaksi belum berhasil dihapus. ${(e as Error).message}`),
   });
 
   const total = list.data?.count ?? 0;
