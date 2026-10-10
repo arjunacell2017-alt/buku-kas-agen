@@ -320,7 +320,9 @@ function TransaksiPage() {
                           size="icon"
                           className="text-destructive"
                           aria-label="Hapus transaksi"
+                          disabled={hapus.isPending}
                           onClick={() => {
+                            if (hapus.isPending) return;
                             if (
                               confirm(
                                 "Hapus transaksi ini? Seluruh mutasi kas, rekening, fee, dan biaya ikut dibatalkan.",
@@ -329,7 +331,11 @@ function TransaksiPage() {
                               hapus.mutate(r.id);
                           }}
                         >
-                          <Trash2 />
+                          {hapus.isPending && hapus.variables === r.id ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            <Trash2 />
+                          )}
                         </Button>
                       </td>
                     </tr>
