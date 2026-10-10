@@ -89,7 +89,7 @@ export async function saveRekening(r: Partial<Rekening> & { bank_name: string })
     account_number: r.account_number || null,
     owner_name: r.owner_name || null,
     opening_balance: Math.max(0, Number(r.opening_balance) || 0),
-    start_date: r.start_date,
+    ...(r.start_date ? { start_date: r.start_date } : {}),
     ...(r.actual_balance !== undefined ? { actual_balance: r.actual_balance } : {}),
     ...(r.status ? { status: r.status } : {}),
   };
