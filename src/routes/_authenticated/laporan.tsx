@@ -28,8 +28,8 @@ function Baris({ label, value, bold }: { label: string; value: string; bold?: bo
 }
 
 function LaporanPage() {
-  const [periode, setPeriode] = useState<Periode>("bulan");
   const awal = rangeFromPeriode("bulan");
+  const [periode, setPeriode] = useState<Periode>("custom");
   const [from, setFrom] = useState(awal.from);
   const [to, setTo] = useState(awal.to);
 
