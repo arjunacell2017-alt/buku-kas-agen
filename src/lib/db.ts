@@ -171,8 +171,8 @@ export async function fetchSaldo() {
     mutasiBankTx += m.mutasiRekening;
     for (const p of mutasiPerRekening(r)) catatRek(p.account_id, p.amount);
     catatMutasiKas(m.mutasiKas);
-    if (r.fee_method === "Saldo") feeSaldo += Number(r.fee);
-    else feeTunai += Number(r.fee);
+    if (r.transaction_type === "Fee Masuk" || r.fee_method === "Saldo") feeSaldo += m.pendapatanFee;
+    else feeTunai += m.pendapatanFee;
     biayaTransaksi += m.biaya;
   }
 
@@ -264,14 +264,15 @@ export async function fetchRingkasan(from: string, to: string, accountId?: strin
   const perJenis = new Map<string, { jumlah: number; nominal: number; fee: number }>();
 
   for (const r of rows) {
+    const m = hitungMutasi(r);
     totalNominal += Number(r.amount);
-    if (r.fee_method === "Saldo") feeSaldo += Number(r.fee);
-    else feeTunai += Number(r.fee);
-    biayaTransaksi += Number(r.transaction_cost);
+    if (r.transaction_type === "Fee Masuk" || r.fee_method === "Saldo") feeSaldo += m.pendapatanFee;
+    else feeTunai += m.pendapatanFee;
+    biayaTransaksi += m.biaya;
     const p = perJenis.get(r.transaction_type) ?? { jumlah: 0, nominal: 0, fee: 0 };
     p.jumlah += 1;
     p.nominal += Number(r.amount);
-    p.fee += Number(r.fee);
+    p.fee += m.pendapatanFee;
     perJenis.set(r.transaction_type, p);
   }
 

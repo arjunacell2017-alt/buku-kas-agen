@@ -22,6 +22,13 @@
       "when": 1791192148612,
       "tag": "0002_multi_rekening",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791602000339,
+      "tag": "0003_ledger_fee_masuk_pendapatan",
+      "breakpoints": true
     }
   ]
 }

@@ -40,10 +40,11 @@ const ARAH_NOMINAL: Record<string, 1 | -1> = {
 };
 
 export function hitungMutasi(t: InputTransaksi): Mutasi {
-  // Fee Masuk: fee yang sudah dicatat sebelumnya kini masuk ke rekening.
-  // Hanya menambah saldo rekening; tidak menyentuh kas dan bukan pendapatan baru.
+  // Fee Masuk: fee yang masuk ke rekening, dicatat sebagai pendapatan fee.
+  // Menambah saldo rekening & pendapatan fee; tidak menyentuh kas.
   if (t.transaction_type === "Fee Masuk") {
-    return { mutasiRekening: Math.max(0, Number(t.amount) || 0), mutasiKas: 0, pendapatanFee: 0, biaya: 0 };
+    const n = Math.max(0, Number(t.amount) || 0);
+    return { mutasiRekening: n, mutasiKas: 0, pendapatanFee: n, biaya: 0 };
   }
   const arah = ARAH_NOMINAL[t.transaction_type] ?? -1;
   const nominal = Math.max(0, Number(t.amount) || 0);
