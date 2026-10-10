@@ -81,7 +81,7 @@ function TransaksiPage() {
     return x ? labelRekening(x) : "-";
   };
   const bukaBaru = () => {
-    const def = rekAktif.length === 1 ? rekAktif[0].id : "";
+    const def = rekAktif.length === 1 ? (rekAktif[0]?.id ?? "") : "";
     setForm({ ...kosong(), account_id: def, cost_account_id: def });
     setOpen(true);
   };

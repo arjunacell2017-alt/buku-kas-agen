@@ -51,6 +51,7 @@ export const buatClient = createServerFn({ method: "POST" })
       throw new Error("Gagal menyimpan data client");
     }
     await admin.from("account_settings").insert({ user_id: uid, business_name: data.agent_name });
+    await admin.from("bank_accounts").insert({ user_id: uid, bank_name: "Rekening Utama" });
     await catat(admin, context.userId, uid, data.agent_name, "Buat client", `Aktif ${data.active_from} s/d ${data.active_until}`);
     return { ok: true };
   });
