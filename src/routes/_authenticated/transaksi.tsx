@@ -16,7 +16,7 @@ import {
 import { JENIS_TRANSAKSI, METODE_PEMBAYARAN, METODE_FEE, METODE_BIAYA } from "@/lib/konstanta";
 import { PageHeader, Panel, Empty } from "@/components/ui-kit";
 import { Modal, Field, inputClass, btnPrimary, btnGhost } from "@/components/Modal";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pageMeta } from "@/lib/meta";
 
