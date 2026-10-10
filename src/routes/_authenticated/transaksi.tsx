@@ -27,6 +27,23 @@ export const Route = createFileRoute("/_authenticated/transaksi")({
 
 const PER_HAL = 20;
 
+/** Jenis yang memakai selisih modal vs pembayaran pelanggan sebagai fee */
+const JENIS_TOTAL_BAYAR = [
+  "Transfer",
+  "Pembayaran",
+  "Pulsa",
+  "Token PLN",
+  "BRIVA",
+  "Top Up",
+  "Lainnya",
+];
+
+/** Fee otomatis = Total Bayar - Nominal (null bila Total Bayar kosong) */
+function feeOtomatis(f: { transaction_type: string; amount: string; total_bayar: string }) {
+  if (!JENIS_TOTAL_BAYAR.includes(f.transaction_type) || f.total_bayar === "") return null;
+  return parseNominal(f.total_bayar) - parseNominal(f.amount);
+}
+
 type Form = {
   id?: string;
   transaction_date: string;
@@ -34,6 +51,7 @@ type Form = {
   transaction_number: string;
   transaction_type: string;
   amount: string;
+  total_bayar: string;
   fee: string;
   fee_method: string;
   transaction_cost: string;
@@ -50,6 +68,7 @@ const kosong = (): Form => ({
   transaction_number: "",
   transaction_type: "Tarik Tunai",
   amount: "",
+  total_bayar: "",
   fee: "",
   fee_method: "Tunai",
   transaction_cost: "",
@@ -301,6 +320,7 @@ function TransaksiPage() {
                               transaction_number: r.transaction_number ?? "",
                               transaction_type: r.transaction_type,
                               amount: String(Number(r.amount)),
+                              total_bayar: "",
                               fee: String(Number(r.fee)),
                               fee_method: r.fee_method ?? "Tunai",
                               transaction_cost: String(Number(r.transaction_cost)),
@@ -375,7 +395,12 @@ function TransaksiPage() {
           className="grid gap-4 sm:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
-            simpan.mutate(form);
+            const fo = feeOtomatis(form);
+            if (fo !== null && fo < 0) {
+              alert("Total Bayar Pelanggan tidak boleh lebih kecil dari Nominal / Modal.");
+              return;
+            }
+            simpan.mutate(fo !== null ? { ...form, fee: String(fo) } : form);
           }}
         >
           <div className="sm:col-span-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">
@@ -438,15 +463,51 @@ function TransaksiPage() {
           <div className="sm:col-span-2 mt-2 border-b border-border pb-2 text-xs font-bold uppercase text-primary">
             Nilai & Fee
           </div>
-          <Field label="Nominal">
+          <Field
+            label={
+              JENIS_TOTAL_BAYAR.includes(form.transaction_type)
+                ? "Nominal / Modal Transaksi"
+                : "Nominal"
+            }
+          >
             <input
               inputMode="numeric"
               required
               className={inputClass}
               value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value.replace(/[^0-9]/g, "") })}
+              onChange={(e) => {
+                const f = { ...form, amount: e.target.value.replace(/[^0-9]/g, "") };
+                const fo = feeOtomatis(f);
+                setForm(fo !== null ? { ...f, fee: String(Math.max(0, fo)) } : f);
+              }}
             />
           </Field>
+          {JENIS_TOTAL_BAYAR.includes(form.transaction_type) && (
+            <Field label="Total Bayar Pelanggan (opsional)">
+              <input
+                inputMode="numeric"
+                className={inputClass}
+                placeholder="Isi untuk hitung fee otomatis"
+                value={form.total_bayar}
+                onChange={(e) => {
+                  const f = { ...form, total_bayar: e.target.value.replace(/[^0-9]/g, "") };
+                  const fo = feeOtomatis(f);
+                  setForm(fo !== null ? { ...f, fee: String(Math.max(0, fo)) } : f);
+                }}
+              />
+              {form.total_bayar !== "" &&
+                ((feeOtomatis(form) ?? 0) < 0 ? (
+                  <span className="mt-1 block text-xs text-destructive">
+                    Total bayar lebih kecil dari nominal. Perbaiki sebelum menyimpan.
+                  </span>
+                ) : (
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    {rupiah(parseNominal(form.total_bayar))} − {rupiah(parseNominal(form.amount))} =
+                    fee {rupiah(feeOtomatis(form) ?? 0)}
+                  </span>
+                ))}
+            </Field>
+          )}
           {form.transaction_type !== "Fee Masuk" ? (
             <>
               <Field label="Fee (pendapatan agen)">
@@ -454,6 +515,12 @@ function TransaksiPage() {
                   inputMode="numeric"
                   className={inputClass}
                   value={form.fee}
+                  readOnly={feeOtomatis(form) !== null}
+                  title={
+                    feeOtomatis(form) !== null
+                      ? "Dihitung otomatis dari Total Bayar Pelanggan"
+                      : undefined
+                  }
                   onChange={(e) => setForm({ ...form, fee: e.target.value.replace(/[^0-9]/g, "") })}
                 />
               </Field>
