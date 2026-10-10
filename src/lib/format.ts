@@ -42,12 +42,9 @@ export function nowTime(): string {
 
 export type Periode = "hari" | "kemarin" | "minggu" | "bulan" | "bulanlalu" | "custom";
 
-export const PERIODE_LABEL: [Exclude<Periode, "custom">, string][] = [
+export const PERIODE_LABEL: [Periode, string][] = [
   ["hari", "Hari Ini"],
-  ["kemarin", "Kemarin"],
-  ["minggu", "Minggu Ini"],
-  ["bulan", "Bulan Ini"],
-  ["bulanlalu", "Bulan Lalu"],
+  ["custom", "Custom"],
 ];
 
 export function rangeFromPeriode(p: Periode): { from: string; to: string } {
