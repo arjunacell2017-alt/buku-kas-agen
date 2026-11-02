@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSaldo, fetchRingkasan, labelRekening, getUserId } from "@/lib/db";
-import { rupiah, rangeFromPeriode, type Periode } from "@/lib/format";
+import { rupiah, tanggalID, rangeFromPeriode, type Periode } from "@/lib/format";
+import { Button } from "@/components/ui/button";
 import { PageHeader, Panel, StatusBadge } from "@/components/ui-kit";
 import { FilterPeriode } from "@/components/FilterPeriode";
 import { pageMeta } from "@/lib/meta";
@@ -34,6 +35,23 @@ function LaporanPage() {
   const [to, setTo] = useState(awal.to);
 
   const [akun, setAkun] = useState("");
+  const [halaman, setHalaman] = useState(0);
+  const detail = useQuery({
+    queryKey: ["laporan-transaksi-detail", from, to, akun, halaman],
+    queryFn: async () => {
+      let q = supabase.from("transactions")
+        .select("id,transaction_number,transaction_date,transaction_type,amount,fee", { count: "exact" })
+        .eq("user_id", await getUserId())
+        .gte("transaction_date", from).lte("transaction_date", to)
+        .order("transaction_date", { ascending: false })
+        .order("created_at", { ascending: false })
+        .range(halaman * 20, halaman * 20 + 19);
+      if (akun) q = q.eq("account_id", akun);
+      const { data, error, count } = await q;
+      if (error) throw error;
+      return { rows: data ?? [], count: count ?? 0 };
+    },
+  });
   const ringkasan = useQuery({
     queryKey: ["ringkasan", from, to, akun],
     queryFn: () => fetchRingkasan(from, to, akun || undefined),
@@ -79,6 +97,7 @@ function LaporanPage() {
         from={from}
         to={to}
         onChange={(p, f, t) => {
+          setHalaman(0);
           setPeriode(p);
           setFrom(f);
           setTo(t);
@@ -88,7 +107,7 @@ function LaporanPage() {
       <select
         className="h-10 rounded-md border border-input bg-card px-3 text-sm"
         value={akun}
-        onChange={(e) => setAkun(e.target.value)}
+        onChange={(e) => { setAkun(e.target.value); setHalaman(0); }}
         aria-label="Filter rekening"
       >
         <option value="">Semua Rekening</option>
@@ -164,6 +183,41 @@ function LaporanPage() {
           </div>
         </Panel>
       </div>
+      <Panel title="Rincian Transaksi">
+        {detail.isError ? <p className="text-sm text-destructive">Rincian transaksi belum dapat dimuat.</p> :
+          detail.isPending ? <p className="text-sm text-muted-foreground">Memuat…</p> : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                    <th className="py-2">Tanggal</th><th className="py-2">Nomor Transaksi</th>
+                    <th className="py-2">Jenis</th><th className="py-2 text-right">Nominal</th>
+                    <th className="py-2 text-right">Fee</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detail.data.rows.map((t) => (
+                    <tr key={t.id} className="border-t border-border">
+                      <td className="py-2 whitespace-nowrap">{tanggalID(t.transaction_date)}</td>
+                      <td className="py-2 whitespace-nowrap tabular-nums">{t.transaction_number ?? "-"}</td>
+                      <td className="py-2 whitespace-nowrap">{t.transaction_type}</td>
+                      <td className="py-2 text-right tabular-nums">{rupiah(t.amount)}</td>
+                      <td className="py-2 text-right tabular-nums">{rupiah(t.fee)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {detail.data.count === 0 ? <p className="py-3 text-sm text-muted-foreground">Tidak ada transaksi.</p> : null}
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <Button variant="outline" size="sm" disabled={halaman === 0} onClick={() => setHalaman(h => h - 1)}>Sebelumnya</Button>
+              <span className="text-xs text-muted-foreground">Halaman {halaman + 1} dari {Math.max(1, Math.ceil(detail.data.count / 20))}</span>
+              <Button variant="outline" size="sm" disabled={(halaman + 1) * 20 >= detail.data.count} onClick={() => setHalaman(h => h + 1)}>Berikutnya</Button>
+            </div>
+          </>
+        )}
+      </Panel>
     </div>
   );
 }
