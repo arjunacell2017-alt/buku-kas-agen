@@ -446,6 +446,7 @@ function TransaksiPage() {
           </Field>
           <Field label="Nomor Transaksi">
             <input
+              aria-label="Nomor Transaksi"
               className={inputClass}
               readOnly
               value={form.id ? form.transaction_number : (nomorQ.data ?? "")}
