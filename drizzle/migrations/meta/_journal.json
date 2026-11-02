@@ -29,6 +29,13 @@
       "when": 1791602000339,
       "tag": "0003_ledger_fee_masuk_pendapatan",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793583869576,
+      "tag": "0004_automatic_transaction_numbers",
+      "breakpoints": true
     }
   ]
 }

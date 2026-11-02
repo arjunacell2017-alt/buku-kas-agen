@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -274,6 +274,24 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction_number_counters: {
+        Row: {
+          last_value: number
+          number_date: string
+          user_id: string
+        }
+        Insert: {
+          last_value?: number
+          number_date: string
+          user_id: string
+        }
+        Update: {
+          last_value?: number
+          number_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           account_id: string | null
@@ -285,6 +303,8 @@ export type Database = {
           fee: number
           fee_method: string
           id: string
+          number_date: string | null
+          number_sequence: number | null
           payment_method: string
           transaction_cost: number
           transaction_date: string
@@ -304,6 +324,8 @@ export type Database = {
           fee?: number
           fee_method?: string
           id?: string
+          number_date?: string | null
+          number_sequence?: number | null
           payment_method?: string
           transaction_cost?: number
           transaction_date?: string
@@ -323,6 +345,8 @@ export type Database = {
           fee?: number
           fee_method?: string
           id?: string
+          number_date?: string | null
+          number_sequence?: number | null
           payment_method?: string
           transaction_cost?: number
           transaction_date?: string
@@ -419,6 +443,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      preview_transaction_number: { Args: { _date?: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "client"

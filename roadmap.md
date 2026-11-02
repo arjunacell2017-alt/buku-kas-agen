@@ -1,0 +1,3 @@
+- [x] Tambahkan penomoran atomik per client/tanggal tanpa mengubah data lama.
+- [x] Tampilkan pratinjau read-only dan nomor di riwayat/mutasi/laporan.
+- [x] Uji urutan, tanggal, simpan bersamaan, edit, hapus, dan penolakan simpan lintas client; uji simpan melalui UI dan baca kembali di Transaksi/Mutasi/Laporan.
