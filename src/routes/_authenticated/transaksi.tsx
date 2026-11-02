@@ -281,7 +281,7 @@ function TransaksiPage() {
           <Empty />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[1250px] text-sm [&_th]:px-3 [&_td]:px-3">
               <thead>
                 <tr className="border-b border-border bg-surface-subtle text-left text-xs font-semibold uppercase text-muted-foreground">
                   <th className="py-2">Tanggal</th>
