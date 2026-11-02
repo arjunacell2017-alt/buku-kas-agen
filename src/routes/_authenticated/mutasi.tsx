@@ -24,7 +24,7 @@ function MutasiPage() {
       const { data, error, count } = await supabase
         .from("ledger_view")
         .select(
-          "transaction_id,transaction_date,transaction_time,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,mutasi_rekening,mutasi_kas,saldo_rekening,saldo_kas,description",
+          "transaction_id,transaction_date,transaction_time,transaction_number,transaction_type,amount,fee,fee_method,transaction_cost,cost_method,mutasi_rekening,mutasi_kas,saldo_rekening,saldo_kas,description",
           { count: "exact" },
         )
         .eq("user_id", await getUserId())
@@ -53,6 +53,7 @@ function MutasiPage() {
                 <tr className="border-b border-border bg-surface-subtle text-left text-xs font-semibold uppercase text-muted-foreground">
                   <th className="py-2">Tanggal</th>
                   <th className="py-2">Jam</th>
+                  <th className="py-2">Nomor Transaksi</th>
                   <th className="py-2">Jenis</th>
                   <th className="py-2 text-right">Nominal</th>
                   <th className="py-2 text-right">Fee</th>
@@ -71,6 +72,7 @@ function MutasiPage() {
                   >
                     <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
                     <td className="py-2">{jamID(r.transaction_time)}</td>
+                    <td className="py-2 whitespace-nowrap tabular-nums">{r.transaction_number ?? "-"}</td>
                     <td className="py-2 whitespace-nowrap">
                       <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-primary">
                         {r.transaction_type}

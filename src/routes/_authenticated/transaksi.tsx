@@ -9,7 +9,6 @@ import {
   rupiahMutasi,
   tanggalID,
   jamID,
-  todayISO,
   nowTime,
   parseNominal,
 } from "@/lib/format";
@@ -19,6 +18,7 @@ import { Modal, Field, inputClass, btnPrimary, btnGhost } from "@/components/Mod
 import { Plus, Pencil, Trash2, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pageMeta } from "@/lib/meta";
+import { jakartaTransactionDate } from "@/lib/transaction-number";
 
 export const Route = createFileRoute("/_authenticated/transaksi")({
   head: () => pageMeta("Transaksi", "Kelola transaksi dan mutasi dana agen."),
@@ -63,7 +63,7 @@ type Form = {
 };
 
 const kosong = (): Form => ({
-  transaction_date: todayISO(),
+  transaction_date: jakartaTransactionDate(),
   transaction_time: nowTime(),
   transaction_number: "",
   transaction_type: "Tarik Tunai",
@@ -89,12 +89,26 @@ function TransaksiPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form>(kosong());
   const rekQ = useQuery(rekeningQuery);
+  const nomorQ = useQuery({
+    queryKey: ["nomor-transaksi", form.transaction_date],
+    enabled: open && !form.id && Boolean(form.transaction_date),
+    staleTime: 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("preview_transaction_number", {
+        _date: form.transaction_date,
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
   const rekAktif = (rekQ.data ?? []).filter((x) => x.status === "aktif");
   const namaRek = (id: string | null) => {
     const x = (rekQ.data ?? []).find((a) => a.id === id);
     return x ? labelRekening(x) : "-";
   };
   const bukaBaru = () => {
+    simpan.reset();
+    qc.removeQueries({ queryKey: ["nomor-transaksi"] });
     const def = rekAktif.length === 1 ? (rekAktif[0]?.id ?? "") : "";
     setForm({ ...kosong(), account_id: def, cost_account_id: def });
     setOpen(true);
@@ -139,7 +153,6 @@ function TransaksiPage() {
       const payload = {
         transaction_date: f.transaction_date,
         transaction_time: f.transaction_time || "00:00",
-        transaction_number: f.transaction_number || null,
         transaction_type: f.transaction_type,
         amount: parseNominal(f.amount),
         fee: parseNominal(f.fee),
@@ -154,12 +167,16 @@ function TransaksiPage() {
       };
       if (rekAktif.length > 0 && !f.account_id) throw new Error("Pilih rekening transaksi");
       if (f.id) {
-        const { error } = await supabase.from("transactions").update(payload).eq("id", f.id);
+        const { data, error } = await supabase.from("transactions").update(payload)
+          .eq("id", f.id).eq("user_id", await getUserId()).select("id,transaction_number").single();
         if (error) throw error;
+        return data;
       } else {
         const user_id = await getUserId();
-        const { error } = await supabase.from("transactions").insert({ ...payload, user_id });
+        const { data, error } = await supabase.from("transactions")
+          .insert({ ...payload, user_id }).select("id,transaction_number").single();
         if (error) throw error;
+        return data;
       }
     },
     onSuccess: () => {
@@ -269,6 +286,7 @@ function TransaksiPage() {
                 <tr className="border-b border-border bg-surface-subtle text-left text-xs font-semibold uppercase text-muted-foreground">
                   <th className="py-2">Tanggal</th>
                   <th className="py-2">Jam</th>
+                  <th className="py-2">Nomor Transaksi</th>
                   <th className="py-2">Jenis</th>
                   <th className="py-2">Rekening</th>
                   <th className="py-2 text-right">Nominal</th>
@@ -287,6 +305,7 @@ function TransaksiPage() {
                     <tr key={r.id} className="border-t border-border/70 hover:bg-secondary/40">
                       <td className="py-2 whitespace-nowrap">{tanggalID(r.transaction_date)}</td>
                       <td className="py-2">{jamID(r.transaction_time)}</td>
+                      <td className="py-2 whitespace-nowrap tabular-nums">{r.transaction_number ?? "-"}</td>
                       <td className="py-2 whitespace-nowrap">
                         <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-primary">
                           {r.transaction_type}
@@ -313,6 +332,7 @@ function TransaksiPage() {
                           size="icon"
                           aria-label="Edit transaksi"
                           onClick={() => {
+                            simpan.reset();
                             setForm({
                               id: r.id,
                               transaction_date: r.transaction_date,
@@ -395,6 +415,7 @@ function TransaksiPage() {
           className="grid gap-4 sm:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
+            if (simpan.isPending || (!form.id && !nomorQ.data)) return;
             const fo = feeOtomatis(form);
             if (fo !== null && fo < 0) {
               alert("Total Bayar Pelanggan tidak boleh lebih kecil dari Nominal / Modal.");
@@ -423,12 +444,24 @@ function TransaksiPage() {
               onChange={(e) => setForm({ ...form, transaction_time: e.target.value })}
             />
           </Field>
-          <Field label="Nomor transaksi">
+          <Field label="Nomor Transaksi">
             <input
               className={inputClass}
-              value={form.transaction_number}
-              onChange={(e) => setForm({ ...form, transaction_number: e.target.value })}
+              readOnly
+              value={form.id ? form.transaction_number : (nomorQ.data ?? "")}
+              placeholder={nomorQ.isFetching ? "Memuat nomor…" : "-"}
             />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Nomor transaksi dibuat otomatis oleh sistem.
+            </span>
+            {!form.id && nomorQ.isError ? (
+              <div className="mt-1 text-xs text-destructive">
+                Nomor belum dapat dimuat.
+                <Button type="button" variant="ghost" size="sm" onClick={() => nomorQ.refetch()}>
+                  Coba lagi
+                </Button>
+              </div>
+            ) : null}
           </Field>
           <Field label="Jenis transaksi">
             <select
@@ -635,9 +668,9 @@ function TransaksiPage() {
             <button type="button" className={btnGhost} onClick={() => setOpen(false)}>
               Batal
             </button>
-            <button type="submit" className={btnPrimary} disabled={simpan.isPending}>
-              Simpan
-            </button>
+            <Button type="submit" disabled={simpan.isPending || (!form.id && !nomorQ.data)}>
+              {simpan.isPending ? "Menyimpan…" : "Simpan"}
+            </Button>
           </div>
           {simpan.isError ? (
             <p className="sm:col-span-2 text-xs text-destructive">
