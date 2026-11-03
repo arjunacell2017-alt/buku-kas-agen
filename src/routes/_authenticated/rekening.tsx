@@ -151,7 +151,6 @@ function RekeningPage() {
       setGalat({});
       setF({ ...f, debit: "", credit: "", description: "" });
       qc.invalidateQueries();
-      toast.success("Mutasi rekening tersimpan.");
     },
     onError: (e: Error) => setGalat({ simpan: `Gagal menyimpan: ${e.message}` }),
   });
