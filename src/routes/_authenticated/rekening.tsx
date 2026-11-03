@@ -110,27 +110,50 @@ function RekeningPage() {
     return out.filter((b) => !pilih || b.account_id === pilih).reverse();
   }, [mutasi.data, rek, pilih]);
 
+  const [galat, setGalat] = useState<Record<string, string>>({});
+  const validasi = () => {
+    const g: Record<string, string> = {};
+    if (!f.transaction_date) g.transaction_date = "Tanggal wajib diisi.";
+    if (!f.account_id) g.account_id = "Pilih rekening terlebih dahulu.";
+    if (!f.transaction_type.trim()) g.transaction_type = "Jenis transaksi wajib diisi.";
+    const d = parseNominal(f.debit);
+    const c = parseNominal(f.credit);
+    if (d > 0 && c > 0) g.nominal = "Isi salah satu saja: Debit atau Kredit.";
+    else if (d <= 0 && c <= 0) g.nominal = "Isi Debit atau Kredit dengan nominal lebih dari nol.";
+    setGalat(g);
+    return Object.keys(g).length === 0;
+  };
+
   const simpan = useMutation({
     mutationFn: async () => {
       const user_id = await getUserId();
       const akun = rek.find((r) => r.id === f.account_id);
-      const { error } = await supabase.from("bank_transactions").insert({
-        user_id,
-        account_id: f.account_id || null,
-        transaction_date: f.transaction_date,
-        account_name: akun?.bank_name ?? "",
-        transaction_type: f.transaction_type || null,
-        debit: parseNominal(f.debit),
-        credit: parseNominal(f.credit),
-        description: f.description || null,
-      });
+      if (!akun) throw new Error("Rekening tidak ditemukan.");
+      const { data, error } = await supabase
+        .from("bank_transactions")
+        .insert({
+          user_id,
+          account_id: akun.id,
+          transaction_date: f.transaction_date,
+          account_name: akun.bank_name,
+          transaction_type: f.transaction_type.trim(),
+          debit: parseNominal(f.debit),
+          credit: parseNominal(f.credit),
+          description: f.description.trim() || null,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      if (!data) throw new Error("Data tidak tersimpan.");
     },
     onSuccess: () => {
       setOpen(false);
+      setGalat({});
       setF({ ...f, debit: "", credit: "", description: "" });
       qc.invalidateQueries();
+      toast.success("Mutasi rekening tersimpan.");
     },
+    onError: (e: Error) => setGalat({ simpan: `Gagal menyimpan: ${e.message}` }),
   });
 
   const hapus = useMutation({
