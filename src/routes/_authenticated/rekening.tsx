@@ -110,9 +110,10 @@ function RekeningPage() {
     return out.filter((b) => !pilih || b.account_id === pilih).reverse();
   }, [mutasi.data, rek, pilih]);
 
-  const [galat, setGalat] = useState<Record<string, string>>({});
+  type Galat = Partial<Record<"transaction_date" | "account_id" | "transaction_type" | "nominal" | "simpan", string>>;
+  const [galat, setGalat] = useState<Galat>({});
   const validasi = () => {
-    const g: Record<string, string> = {};
+    const g: Galat = {};
     if (!f.transaction_date) g.transaction_date = "Tanggal wajib diisi.";
     if (!f.account_id) g.account_id = "Pilih rekening terlebih dahulu.";
     if (!f.transaction_type.trim()) g.transaction_type = "Jenis transaksi wajib diisi.";
