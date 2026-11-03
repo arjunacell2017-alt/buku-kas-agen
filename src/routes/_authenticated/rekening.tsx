@@ -110,27 +110,50 @@ function RekeningPage() {
     return out.filter((b) => !pilih || b.account_id === pilih).reverse();
   }, [mutasi.data, rek, pilih]);
 
+  type Galat = Partial<Record<"transaction_date" | "account_id" | "transaction_type" | "nominal" | "simpan", string>>;
+  const [galat, setGalat] = useState<Galat>({});
+  const validasi = () => {
+    const g: Galat = {};
+    if (!f.transaction_date) g.transaction_date = "Tanggal wajib diisi.";
+    if (!f.account_id) g.account_id = "Pilih rekening terlebih dahulu.";
+    if (!f.transaction_type.trim()) g.transaction_type = "Jenis transaksi wajib diisi.";
+    const d = parseNominal(f.debit);
+    const c = parseNominal(f.credit);
+    if (d > 0 && c > 0) g.nominal = "Isi salah satu saja: Debit atau Kredit.";
+    else if (d <= 0 && c <= 0) g.nominal = "Isi Debit atau Kredit dengan nominal lebih dari nol.";
+    setGalat(g);
+    return Object.keys(g).length === 0;
+  };
+
   const simpan = useMutation({
     mutationFn: async () => {
       const user_id = await getUserId();
       const akun = rek.find((r) => r.id === f.account_id);
-      const { error } = await supabase.from("bank_transactions").insert({
-        user_id,
-        account_id: f.account_id || null,
-        transaction_date: f.transaction_date,
-        account_name: akun?.bank_name ?? "",
-        transaction_type: f.transaction_type || null,
-        debit: parseNominal(f.debit),
-        credit: parseNominal(f.credit),
-        description: f.description || null,
-      });
+      if (!akun) throw new Error("Rekening tidak ditemukan.");
+      const { data, error } = await supabase
+        .from("bank_transactions")
+        .insert({
+          user_id,
+          account_id: akun.id,
+          transaction_date: f.transaction_date,
+          account_name: akun.bank_name,
+          transaction_type: f.transaction_type.trim(),
+          debit: parseNominal(f.debit),
+          credit: parseNominal(f.credit),
+          description: f.description.trim() || null,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      if (!data) throw new Error("Data tidak tersimpan.");
     },
     onSuccess: () => {
       setOpen(false);
+      setGalat({});
       setF({ ...f, debit: "", credit: "", description: "" });
       qc.invalidateQueries();
     },
+    onError: (e: Error) => setGalat({ simpan: `Gagal menyimpan: ${e.message}` }),
   });
 
   const hapus = useMutation({
@@ -371,23 +394,24 @@ function RekeningPage() {
       <Modal open={open} title="Tambah Mutasi Rekening" onClose={() => setOpen(false)}>
         <form
           className="grid gap-3 sm:grid-cols-2"
+          noValidate
           onSubmit={(e) => {
             e.preventDefault();
-            simpan.mutate();
+            if (simpan.isPending) return;
+            if (validasi()) simpan.mutate();
           }}
         >
           <Field label="Tanggal">
             <input
               type="date"
-              required
               className={inputClass}
               value={f.transaction_date}
               onChange={(e) => setF({ ...f, transaction_date: e.target.value })}
             />
+            {galat.transaction_date && <p className="mt-1 text-xs text-destructive">{galat.transaction_date}</p>}
           </Field>
           <Field label="Rekening">
             <select
-              required
               className={inputClass}
               value={f.account_id}
               onChange={(e) => setF({ ...f, account_id: e.target.value })}
@@ -401,6 +425,7 @@ function RekeningPage() {
                   </option>
                 ))}
             </select>
+            {galat.account_id && <p className="mt-1 text-xs text-destructive">{galat.account_id}</p>}
           </Field>
           <Field label="Jenis transaksi">
             <input
@@ -408,6 +433,7 @@ function RekeningPage() {
               value={f.transaction_type}
               onChange={(e) => setF({ ...f, transaction_type: e.target.value })}
             />
+            {galat.transaction_type && <p className="mt-1 text-xs text-destructive">{galat.transaction_type}</p>}
           </Field>
           <Field label="Debit (uang keluar)">
             <input
@@ -425,6 +451,9 @@ function RekeningPage() {
               onChange={(e) => setF({ ...f, credit: e.target.value.replace(/[^0-9]/g, "") })}
             />
           </Field>
+          {galat.nominal && (
+            <p className="sm:col-span-2 -mt-1 text-xs text-destructive">{galat.nominal}</p>
+          )}
           <Field label="Keterangan">
             <input
               className={inputClass}
@@ -433,12 +462,17 @@ function RekeningPage() {
               onChange={(e) => setF({ ...f, description: e.target.value })}
             />
           </Field>
+          {galat.simpan && (
+            <p className="sm:col-span-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {galat.simpan}
+            </p>
+          )}
           <div className="sm:col-span-2 flex justify-end gap-2">
             <button type="button" className={btnGhost} onClick={() => setOpen(false)}>
               Batal
             </button>
             <button type="submit" className={btnPrimary} disabled={simpan.isPending}>
-              Simpan
+              {simpan.isPending ? "Menyimpan..." : "Simpan"}
             </button>
           </div>
         </form>

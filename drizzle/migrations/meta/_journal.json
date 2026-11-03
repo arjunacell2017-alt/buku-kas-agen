@@ -36,6 +36,13 @@
       "when": 1793583869576,
       "tag": "0004_automatic_transaction_numbers",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793683699961,
+      "tag": "0005_fix_validate_account_owner",
+      "breakpoints": true
     }
   ]
 }
