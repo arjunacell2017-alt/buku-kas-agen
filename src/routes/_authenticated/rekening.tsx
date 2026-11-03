@@ -393,23 +393,24 @@ function RekeningPage() {
       <Modal open={open} title="Tambah Mutasi Rekening" onClose={() => setOpen(false)}>
         <form
           className="grid gap-3 sm:grid-cols-2"
+          noValidate
           onSubmit={(e) => {
             e.preventDefault();
-            simpan.mutate();
+            if (simpan.isPending) return;
+            if (validasi()) simpan.mutate();
           }}
         >
           <Field label="Tanggal">
             <input
               type="date"
-              required
               className={inputClass}
               value={f.transaction_date}
               onChange={(e) => setF({ ...f, transaction_date: e.target.value })}
             />
+            {galat.transaction_date && <p className="mt-1 text-xs text-destructive">{galat.transaction_date}</p>}
           </Field>
           <Field label="Rekening">
             <select
-              required
               className={inputClass}
               value={f.account_id}
               onChange={(e) => setF({ ...f, account_id: e.target.value })}
@@ -423,6 +424,7 @@ function RekeningPage() {
                   </option>
                 ))}
             </select>
+            {galat.account_id && <p className="mt-1 text-xs text-destructive">{galat.account_id}</p>}
           </Field>
           <Field label="Jenis transaksi">
             <input
@@ -430,6 +432,7 @@ function RekeningPage() {
               value={f.transaction_type}
               onChange={(e) => setF({ ...f, transaction_type: e.target.value })}
             />
+            {galat.transaction_type && <p className="mt-1 text-xs text-destructive">{galat.transaction_type}</p>}
           </Field>
           <Field label="Debit (uang keluar)">
             <input
@@ -447,6 +450,9 @@ function RekeningPage() {
               onChange={(e) => setF({ ...f, credit: e.target.value.replace(/[^0-9]/g, "") })}
             />
           </Field>
+          {galat.nominal && (
+            <p className="sm:col-span-2 -mt-1 text-xs text-destructive">{galat.nominal}</p>
+          )}
           <Field label="Keterangan">
             <input
               className={inputClass}
@@ -455,12 +461,17 @@ function RekeningPage() {
               onChange={(e) => setF({ ...f, description: e.target.value })}
             />
           </Field>
+          {galat.simpan && (
+            <p className="sm:col-span-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {galat.simpan}
+            </p>
+          )}
           <div className="sm:col-span-2 flex justify-end gap-2">
             <button type="button" className={btnGhost} onClick={() => setOpen(false)}>
               Batal
             </button>
             <button type="submit" className={btnPrimary} disabled={simpan.isPending}>
-              Simpan
+              {simpan.isPending ? "Menyimpan..." : "Simpan"}
             </button>
           </div>
         </form>
